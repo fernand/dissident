@@ -1,6 +1,4 @@
 import json
-import os
-import pickle
 from dataclasses import dataclass
 from typing import Optional
 
@@ -68,7 +66,7 @@ class CEOChange(BaseModel):
 def get_ceo_change(text):
     return utils.get_openai_response(
         utils.openai_client,
-        """Find the name of the company which is filing the 8-K document. For that company, look for any change of CEO / Chief Executive Offcie (and **ONLY** this office) in the Item 5.02 section. Then find (if any) the departing and new CEO names.""",
+        """Find the name of the company which is filing the 8-K document. For that company, look for any change of CEO / Chief Executive Officer (and **ONLY** this office) in the Item 5.02 section. Then find (if any) the departing and new CEO names.""",
         text,
         CEOChange,
     )
