@@ -3,7 +3,7 @@ import json
 
 def get_cik_from_ticker(ticker):
     url = "https://www.sec.gov/files/company_tickers.json"
-    response = requests.get(url, headers={'User-Agent': 'Company Name CompanyEmail@domain.com'})
+    response = requests.get(url, headers={'User-Agent': 'Chrome/128.0.0.0'})
     if response.status_code == 200:
         data = json.loads(response.text)
 
