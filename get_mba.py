@@ -58,25 +58,11 @@ class CompanyName(BaseModel):
 class CEOName(BaseModel):
     name: str
 
-class CEOAge(BaseModel):
-    age: int
-
 class CEOHasMBA(BaseModel):
     has_mba: bool
 
 @dataclass
-class AgeResult:
-    raw_company_name:str = None
-    symbol:str = None
-    company_name:str = None
-    ceo_name:str = None
-    ceo_age:str = None
-    ceo_response:str = None
-    ceo_age_response:str = None
-
-@dataclass
 class MBAResult:
-    raw_company_name:str = None
     symbol:str = None
     company_name:str = None
     ceo_name:str = None
@@ -84,16 +70,8 @@ class MBAResult:
     ceo_response:str = None
     ceo_mba_response:str = None
 
-COMPANY_NAME_PROMPT = """Extract the name of the company based on given trading stock description. Examples:
-- "American Assets Trust Inc. Common Stock" should be extracted as "American Assets Trust Inc."
-- "AllianceBernstein Holding L.P.  Units" should be extracted as "AllianceBernstein Holding L.P."
-"""
-
 def ceo_question(company_name, symbol):
     return f"Who is the CEO of {company_name} (stock ticker {symbol})"
-
-def ceo_age_question(ceo_name, company_name):
-    return f"What is the age of {ceo_name}, CEO of {company_name}"
 
 def ceo_mba_question(ceo_name, company_name):
     return f"Does {ceo_name}, CEO of {company_name} have an MBA or MBA like degree?"
@@ -139,51 +117,7 @@ def get_perplexity_response(client, message):
     )
     return response.choices[0].message.content
 
-def age_query(openai_client, perplexity_client, raw_company_name, symbol):
-    company_name = get_openai_response(
-        openai_client,
-        COMPANY_NAME_PROMPT,
-        raw_company_name,
-        CompanyName,
-    ).name
-    print(company_name)
-    ceo_response = get_perplexity_response(perplexity_client, ceo_question(company_name, symbol))
-    print(ceo_response)
-    ceo_name = get_openai_response(
-        openai_client,
-        "Extract the name of the CEO.",
-        ceo_response,
-        CEOName,
-    ).name
-    print(ceo_name)
-    ceo_age_response = get_perplexity_response(perplexity_client, ceo_age_question(ceo_name, company_name))
-    print(ceo_age_response)
-    ceo_age = get_openai_response(
-        openai_client,
-        "Extract the age of the CEO",
-        ceo_age_response,
-        CEOAge,
-    ).age
-    print(ceo_age)
-    print()
-    return AgeResult(
-        raw_company_name,
-        symbol,
-        company_name,
-        ceo_name,
-        ceo_age,
-        ceo_response,
-        ceo_age_response,
-    )
-
-def mba_query(openai_client, perplexity_client, raw_company_name, symbol):
-    company_name = get_openai_response(
-        openai_client,
-        COMPANY_NAME_PROMPT,
-        raw_company_name,
-        CompanyName,
-    ).name
-    print(company_name)
+def mba_query(openai_client, perplexity_client, company_name, symbol):
     ceo_response = get_perplexity_response(perplexity_client, ceo_question(company_name, symbol))
     print(ceo_response)
     ceo_name = get_openai_response(
@@ -204,7 +138,6 @@ def mba_query(openai_client, perplexity_client, raw_company_name, symbol):
     print(ceo_has_mba)
     print()
     return MBAResult(
-        raw_company_name,
         symbol,
         company_name,
         ceo_name,
@@ -215,8 +148,12 @@ def mba_query(openai_client, perplexity_client, raw_company_name, symbol):
 
 if __name__ == '__main__':
     results_path = 'results_mba.pkl'
-    with open('nasdaq.json') as f:
-        companies = json.load(f)
+    companies = []
+    with open('company_tickers_exchange.json') as f:
+        for row in json.load(f)['data']:
+            cik, company_name, symbol, exchange = row
+            if exchange == 'Nasdaq':
+                companies.append({'name': company_name, 'symbol': symbol})
 
     openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
     perplexity_client = openai.OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
