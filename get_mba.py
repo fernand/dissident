@@ -1,7 +1,4 @@
 from dataclasses import dataclass
-import json
-import os
-import pickle
 
 from pydantic import BaseModel
 
@@ -62,27 +59,8 @@ def mba_query(openai_client, perplexity_client, company_name, symbol):
 
 if __name__ == '__main__':
     results_path = 'results_mba.pkl'
-    companies = []
-    with open('company_tickers_exchange.json') as f:
-        for row in json.load(f)['data']:
-            cik, company_name, symbol, exchange = row
-            if exchange == 'Nasdaq':
-                companies.append({'name': company_name, 'symbol': symbol})
+    companies = utils.get_nasdaq_companies()
 
-    if os.path.exists(results_path):
-        with open(results_path, 'rb') as f:
-            results = pickle.load(f)
-    else:
-        results = {}
-
-    for company in companies[10:]:
-        symbol = company['symbol']
-        if symbol in results:
-            continue
-        try:
-            results[symbol] = mba_query(utils.openai_client, utils.perplexity_client, company['name'], symbol)
-        except Exception as e:
-            print(e)
-            continue
-        with open(results_path, 'wb') as f:
-            pickle.dump(results, f)
+    def query(company):
+        return mba_query(utils.openai_client, utils.perplexity_client, company['name'], company['symbol'])
+    utils.continue_doing(mba_query)

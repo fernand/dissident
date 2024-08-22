@@ -1,3 +1,6 @@
+import json
+import os
+import pickle
 import random
 import time
 from functools import wraps
@@ -108,3 +111,31 @@ def get_perplexity_response(client, message):
         messages=perplexity_chat_template(message),
     )
     return response.choices[0].message.content
+
+def get_nasdaq_companies():
+    companies = []
+    with open('company_tickers_exchange.json') as f:
+        for row in json.load(f)['data']:
+            cik, company_name, symbol, exchange = row
+            if exchange == 'Nasdaq':
+                companies.append({'cik': cik, 'name': company_name, 'symbol': symbol})
+    return companies
+
+def continue_doing(results_path, companies, func):
+    if os.path.exists(results_path):
+        with open(results_path, 'rb') as f:
+            results = pickle.load(f)
+    else:
+        results = {}
+
+    for company in companies:
+        symbol = company['symbol']
+        if symbol in results:
+            continue
+        try:
+            results[symbol] = func(company)
+        except Exception as e:
+            print(e)
+            continue
+        with open(results_path, 'wb') as f:
+            pickle.dump(results, f)
