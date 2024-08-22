@@ -2,55 +2,14 @@ from dataclasses import dataclass
 import json
 import os
 import pickle
-import random
-import time
 
 import openai
 from pydantic import BaseModel
 
+import utils
+
 OPENAI_API_KEY = "sk-svcacct-Rm8mE1eL2npMQ90EYva-orGqH5LAIJ2zTKrgIG1HvWOZ05SJivT3BlbkFJKfXMhhcq72cc3p9jkourbUTO4cCSagzuAKzrGaKDKp7ToPxYMA"
 PERPLEXITY_API_KEY = "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"
-
-def retry_with_exponential_backoff(
-    func,
-    initial_delay: float = 1,
-    exponential_base: float = 2,
-    jitter: bool = True,
-    max_retries: int = 10,
-    errors: tuple = (openai.RateLimitError,),
-):
-    """Retry a function with exponential backoff."""
-
-    def wrapper(*args, **kwargs):
-        # Initialize variables
-        num_retries = 0
-        delay = initial_delay
-
-        # Loop until a successful response or max_retries is hit or an exception is raised
-        while True:
-            try:
-                return func(*args, **kwargs)
-
-            # Retry on specific errors
-            except errors as e:
-                # Increment retries
-                num_retries += 1
-
-                # Check if max retries has been reached
-                if num_retries > max_retries:
-                    raise Exception(f"Maximum number of retries ({max_retries}) exceeded.")
-
-                # Increment the delay
-                delay *= exponential_base * (1 + jitter * random.random())
-
-                # Sleep for the delay
-                time.sleep(delay)
-
-            # Raise exceptions for any errors not specified
-            except Exception as e:
-                raise e
-
-    return wrapper
 
 class CompanyName(BaseModel):
     name: str
@@ -100,7 +59,7 @@ def perplexity_chat_template(message):
         },
     ]
 
-@retry_with_exponential_backoff
+@utils.retry_with_exponential_backoff
 def get_openai_response(client, instruction, query_result, format):
     completion = client.beta.chat.completions.parse(
         model='gpt-4o-mini',
@@ -109,7 +68,7 @@ def get_openai_response(client, instruction, query_result, format):
     )
     return completion.choices[0].message.parsed
 
-@retry_with_exponential_backoff
+@utils.retry_with_exponential_backoff
 def get_perplexity_response(client, message):
     response = client.chat.completions.create(
         model="llama-3.1-sonar-small-128k-online",
