@@ -1,4 +1,5 @@
 import json
+import pickle
 from dataclasses import dataclass
 from typing import Optional
 
@@ -77,6 +78,7 @@ class CEOChangeWithDate:
     previous_ceo_name: Optional[str]
     new_ceo_name: Optional[str]
 
+# TODO: Actually fetch all the 8k forms first then use the OpenAI Batch API.
 def process_forms(forms: list[Form]):
     ceo_changes = []
     for form in forms:
@@ -101,8 +103,22 @@ if __name__ == '__main__':
     # url = 'https://www.sec.gov/Archives/edgar/data/1633917/000163391716000222/a8-kready.htm'
     # ceo_change = get_ceo_change(get_8k(url))
 
-    results_path = 'results_8kforms.pkl'
     companies = utils.get_nasdaq_companies()
+
+    results_path = 'results_8kforms.pkl'
     def query(company):
         return get_8k_forms(format_cik(str(company['cik'])))
     utils.continue_doing(results_path, companies, query)
+
+    # with open('results_8kforms.pkl', 'rb') as f:
+    #     forms = pickle.load(f)
+    # for company in companies:
+    #     company['forms'] = forms[company['symbol']]
+    # results_path = 'results_8ktext.pkl'
+    # def query(company):
+    #     texts = []
+    #     for form in company['form']:
+    #         if form.has_502:
+    #             texts.append(get_text(get_8k(form.url)))
+    #     return texts
+    # utils.continue_doing(results_path, companies, query)

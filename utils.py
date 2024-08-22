@@ -27,7 +27,6 @@ def rate_limiter(calls_per_second):
             elapsed = current_time - last_call_time[0]
             if elapsed < min_interval:
                 sleep_time = min_interval - elapsed
-                print(f"Rate limit exceeded. Waiting for {sleep_time:.2f} seconds.")
                 time.sleep(sleep_time)
 
             last_call_time[0] = time.perf_counter()
