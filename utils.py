@@ -4,6 +4,12 @@ from functools import wraps
 
 import openai
 
+OPENAI_API_KEY = "sk-svcacct-Rm8mE1eL2npMQ90EYva-orGqH5LAIJ2zTKrgIG1HvWOZ05SJivT3BlbkFJKfXMhhcq72cc3p9jkourbUTO4cCSagzuAKzrGaKDKp7ToPxYMA"
+PERPLEXITY_API_KEY = "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"
+
+openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+perplexity_client = openai.OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
+
 def rate_limiter(calls_per_second):
     """Rate limit decorator to restrict the function call rate to `calls_per_second`."""
 
@@ -61,3 +67,44 @@ def retry_with_exponential_backoff(
                 raise e
 
     return wrapper
+
+def openai_chat_template(instruction, query_result):
+    return [
+        {
+            "role": "system",
+            "content": instruction,
+        },
+        {
+            "role": "user",
+            "content": query_result,
+        },
+    ]
+
+def perplexity_chat_template(message):
+    return [
+        {
+            "role": "system",
+            "content": "Be concise.",
+        },
+        {
+            "role": "user",
+            "content": message,
+        },
+    ]
+
+@retry_with_exponential_backoff
+def get_openai_response(client, instruction, query_result, format):
+    completion = client.beta.chat.completions.parse(
+        model='gpt-4o-mini',
+        messages=openai_chat_template(instruction, query_result),
+        response_format=format,
+    )
+    return completion.choices[0].message.parsed
+
+@retry_with_exponential_backoff
+def get_perplexity_response(client, message):
+    response = client.chat.completions.create(
+        model="llama-3.1-sonar-small-128k-online",
+        messages=perplexity_chat_template(message),
+    )
+    return response.choices[0].message.content

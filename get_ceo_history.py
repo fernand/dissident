@@ -1,7 +1,9 @@
 import json
+from typing import Optional
 
 import lxml.html
 import httpx
+from pydantic import BaseModel
 
 import utils
 
@@ -38,12 +40,25 @@ def get_text(node):
 
 @utils.rate_limiter(calls_per_second=10)
 def get_8k(url):
-    url = 'https://www.sec.gov/Archives/edgar/data/1633917/000163391716000222/a8-kready.htm'
     response = httpx.get(url, headers={'User-Agent': 'Your Name (your.email@example.com)'})
-    html_content = response.text.replace('&nbsp;', ' ')
-    tree = lxml.html.fromstring(html_content)
+    tree = lxml.html.fromstring(response.content)
     return get_text(tree)
+
+class CEOChange(BaseModel):
+    company_name: str
+    previous_ceo_name: Optional[str]
+    new_ceo_name: Optional[str]
+
+def get_ceo_change(text):
+    return utils.get_openai_response(
+        utils.openai_client,
+        """Find the name of the company which is filing the 8-K document. For that company, look for any change of CEO / Chief Executive Offcie (and **ONLY** this office) in the Item 5.02 section. Then find (if any) the departing and new CEO names.""",
+        text,
+        CEOChange,
+    )
 
 if __name__ == '__main__':
     # data = get_8k_urls('0001633917')
-    pass
+    # url = 'https://www.sec.gov/Archives/edgar/data/1633917/000119312523212353/d475247d8k.htm'
+    url = 'https://www.sec.gov/Archives/edgar/data/1633917/000163391716000222/a8-kready.htm'
+    ceo_change = get_ceo_change(get_8k(url))
