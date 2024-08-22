@@ -106,5 +106,5 @@ if __name__ == '__main__':
     results_path = 'results_8kforms.pkl'
     companies = utils.get_nasdaq_companies()
     def query(company):
-        return get_8k_forms(company['cik'])
+        return get_8k_forms(format_cik(str(company['cik'])))
     utils.continue_doing(results_path, companies, query)
