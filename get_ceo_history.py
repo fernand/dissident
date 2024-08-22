@@ -1,4 +1,5 @@
 import json
+from dataclasses import dataclass
 from typing import Optional
 
 import lxml.html
@@ -9,6 +10,12 @@ import utils
 
 def format_cik(cik):
     return '0' * (10 - len(cik)) + cik
+
+@dataclass
+class Form:
+    url: str
+    date: str
+    has_502: bool
 
 @utils.rate_limiter(calls_per_second=10)
 def get_8k_urls(cik, cumul_urls=[]):
@@ -23,7 +30,11 @@ def get_8k_urls(cik, cumul_urls=[]):
             f1 = f1.replace('-', '')
             url = '/'.join(('https://www.sec.gov/Archives/edgar/data/1633917', f1, f2))
             has_502 = ('items' in hit and '5.02' in hit['items']) or ('_source' in hit and '5.02' in hit['_source']['items'])
-            cumul_urls.append((url, has_502))
+            if 'file_date' in hit:
+                file_date = hit['file_date']
+            else:
+                file_data = hit['_source']['file_date']
+            cumul_urls.append(Form(url, file_data, has_502))
         if total_hits - len(cumul_urls) > 0:
             return get_8k_urls(cik, cumul_urls)
         else:
@@ -61,7 +72,7 @@ def get_ceo_change(text):
     )
 
 if __name__ == '__main__':
-    # data = get_8k_urls('0001633917')
+    # data = get_8k_urls(format_cik('1633917'))
     data = get_8k_urls(format_cik('68505'))
     # url = 'https://www.sec.gov/Archives/edgar/data/1633917/000119312523212353/d475247d8k.htm'
     # url = 'https://www.sec.gov/Archives/edgar/data/1633917/000163391716000222/a8-kready.htm'
