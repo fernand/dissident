@@ -29,7 +29,7 @@ def get_8k_forms(cik, cumul_urls=[]):
         for hit in current_hits:
             f1, f2 = hit['_id'].split(':')
             f1 = f1.replace('-', '')
-            url = '/'.join((f'https://www.sec.gov/Archives/edgar/data/{cik}', f1, f2))
+            url = '/'.join((f"https://www.sec.gov/Archives/edgar/data/{cik.lstrip('0')}", f1, f2))
             has_502 = ('items' in hit and '5.02' in hit['items']) or ('_source' in hit and '5.02' in hit['_source']['items'])
             if 'file_date' in hit:
                 file_date = hit['file_date']
@@ -116,11 +116,11 @@ if __name__ == '__main__':
         company['forms'] = forms[company['symbol']]
     results_path = 'results_8kform_text.pkl'
     def query(company):
-        texts = []
+        new_forms = []
         for form in company['forms']:
             if form.has_502:
-                texts.append({'form': form, 'text': get_8k(form.url)})
-        return texts
+                new_forms.append({'form': form, 'text': get_8k(form.url)})
+        return new_forms
     utils.continue_doing(results_path, companies, query)
 
     # import tiktoken
