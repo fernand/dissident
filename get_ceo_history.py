@@ -96,20 +96,13 @@ def process_forms(forms: list[Form]):
         ))
     return ceo_changes
 
-if __name__ == '__main__':
-    # data = get_8k_urls(format_cik('1633917'))
-    # data = get_8k_urls(format_cik('68505'))
-    # url = 'https://www.sec.gov/Archives/edgar/data/1633917/000119312523212353/d475247d8k.htm'
-    # url = 'https://www.sec.gov/Archives/edgar/data/1633917/000163391716000222/a8-kready.htm'
-    # ceo_change = get_ceo_change(get_8k(url))
+def step_1(companies):
+    results_path = 'results_8kforms.pkl'
+    def query(company):
+        return get_8k_forms(format_cik(str(company['cik'])))
+    utils.continue_doing(results_path, companies, query)
 
-    companies = utils.get_nasdaq_companies()
-
-    # results_path = 'results_8kforms.pkl'
-    # def query(company):
-    #     return get_8k_forms(format_cik(str(company['cik'])))
-    # utils.continue_doing(results_path, companies, query)
-
+def step_2(companies):
     with open('results_8kforms.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
@@ -123,16 +116,20 @@ if __name__ == '__main__':
         return new_forms
     utils.continue_doing(results_path, companies, query)
 
-    # import tiktoken
-    # encoding = tiktoken.encoding_for_model('gpt-4o')
-    # with open('results_8kform_text.pkl', 'rb') as f:
-    #     forms = pickle.load(f)
-    # count = 0
-    # for company_forms in forms.values():
-    #     for form in company_forms:
-    #         if 'does not exist' in form['text]:
-    #             count += 1
-    #             break
-    #         # count += len(encoding.encode(text))
-    # print(len(texts))
-    # print(count)
+def step_3_count_tokens():
+    import tiktoken
+    encoding = tiktoken.encoding_for_model('gpt-4o')
+    with open('results_8kform_text.pkl', 'rb') as f:
+        forms = pickle.load(f)
+    count = 0
+    for company_forms in forms.values():
+        for form in company_forms:
+            count += len(encoding.encode(form['text']))
+    print('num M tokens', count / 1e6)
+    print(f'GPT-4o-Mini cost: ${0.15 * count / 1e6}')
+
+if __name__ == '__main__':
+    companies = utils.get_nasdaq_companies()
+    # step_1(companies)
+    # step_2(companies)
+    step_3_count_tokens()
