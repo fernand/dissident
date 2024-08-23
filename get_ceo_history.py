@@ -128,7 +128,7 @@ def step_3_count_tokens():
     for company_forms in forms.values():
         for form in company_forms:
             count += system_prompt_len + len(encoding.encode(form['text']))
-    print('num M tokens', count / 1e6)
+    print('num M tokens', round(count / 1e6, 1))
     print(f'GPT-4o-Mini cost: ${0.15 * count / 1e6}')
 
 if __name__ == '__main__':
