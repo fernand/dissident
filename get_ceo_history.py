@@ -57,7 +57,10 @@ def get_text(node):
 
 @utils.RateLimiter(calls_per_second=10)
 def get_8k(url):
-    response = httpx.get(url, headers={'User-Agent': 'Your Name (your.email@example.com)'})
+    response = httpx.get(url, headers={
+        'User-Agent': 'Your Name (your.email@example.com)',
+        'Accept-Encoding': 'gzip, deflate, br',
+    })
     tree = lxml.html.fromstring(response.content)
     return get_text(tree)
 
