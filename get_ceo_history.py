@@ -43,7 +43,7 @@ def get_8k_forms(cik, cumul_urls=[]):
         else:
             return cumul_urls
     else:
-        print(f"Error: Unable to fetch data. {response.status_code} {response.text}")
+        print(f'Error: Unable to fetch data. {response.status_code} {response.text}')
         return []
 
 def get_text(node):
@@ -66,7 +66,7 @@ def get_8k(url):
 
 def step_1(companies):
     def query(company):
-        return get_8k_forms(format_cik(str(company['cik'])))
+        return get_8k_forms(format_cik(str(company['cik'])), cumul_urls=[])
     results_path = 'results_8kforms.pkl'
     utils.continue_doing(results_path, companies, query)
 
@@ -146,7 +146,7 @@ def step_4(companies):
 
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
-    # step_1(companies)
-    step_2(companies)
+    step_1(companies)
+    # step_2(companies)
     # step_3_count_tokens()
     # step_4(companies)
