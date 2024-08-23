@@ -9,6 +9,8 @@ from pydantic import BaseModel
 
 import utils
 
+CEO_CHANGE_PROMPT = """Find the name of the company which is filing the 8-K document. For that company, look for any change of CEO / Chief Executive Officer (and **ONLY** this office) in the Item 5.02 section. Then find (if any) the departing and new CEO names."""
+
 def format_cik(cik):
     return '0' * (10 - len(cik)) + cik
 
@@ -67,7 +69,7 @@ class CEOChange(BaseModel):
 def get_ceo_change(text):
     return utils.get_openai_response(
         utils.openai_client,
-        """Find the name of the company which is filing the 8-K document. For that company, look for any change of CEO / Chief Executive Officer (and **ONLY** this office) in the Item 5.02 section. Then find (if any) the departing and new CEO names.""",
+        CEO_CHANGE_PROMPT,
         text,
         CEOChange,
     )
@@ -118,13 +120,14 @@ def step_2(companies):
 
 def step_3_count_tokens():
     import tiktoken
-    encoding = tiktoken.encoding_for_model('gpt-4o')
+    encoding = tiktoken.encoding_for_model('gpt-4o-mini')
+    system_prompt_len = len(encoding.encode(CEO_CHANGE_PROMPT))
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
     count = 0
     for company_forms in forms.values():
         for form in company_forms:
-            count += len(encoding.encode(form['text']))
+            count += system_prompt_len + len(encoding.encode(form['text']))
     print('num M tokens', count / 1e6)
     print(f'GPT-4o-Mini cost: ${0.15 * count / 1e6}')
 
