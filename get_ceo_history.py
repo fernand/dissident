@@ -105,10 +105,10 @@ if __name__ == '__main__':
 
     companies = utils.get_nasdaq_companies()
 
-    results_path = 'results_8kforms.pkl'
-    def query(company):
-        return get_8k_forms(format_cik(str(company['cik'])))
-    utils.continue_doing(results_path, companies, query)
+    # results_path = 'results_8kforms.pkl'
+    # def query(company):
+    #     return get_8k_forms(format_cik(str(company['cik'])))
+    # utils.continue_doing(results_path, companies, query)
 
     # with open('results_8kforms.pkl', 'rb') as f:
     #     forms = pickle.load(f)
@@ -117,8 +117,8 @@ if __name__ == '__main__':
     # results_path = 'results_8ktext.pkl'
     # def query(company):
     #     texts = []
-    #     for form in company['form']:
+    #     for form in company['forms']:
     #         if form.has_502:
-    #             texts.append(get_text(get_8k(form.url)))
+    #             texts.append(get_8k(form.url))
     #     return texts
     # utils.continue_doing(results_path, companies, query)
