@@ -18,7 +18,7 @@ class Form:
     date: str
     has_502: bool
 
-@utils.rate_limiter(calls_per_second=10)
+@utils.RateLimiter(calls_per_second=10)
 def get_8k_forms(cik, cumul_urls=[]):
     url = f'https://efts.sec.gov/LATEST/search-index?from={len(cumul_urls)}&dateRange=custom&ciks={cik}&startdt=2001-01-01&forms=8-K'
     response = httpx.get(url, headers={'User-Agent': 'Chrome/128.0.0.0'})
@@ -53,7 +53,7 @@ def get_text(node):
         text += node.tail
     return text
 
-@utils.rate_limiter(calls_per_second=10)
+@utils.RateLimiter(calls_per_second=10)
 def get_8k(url):
     response = httpx.get(url, headers={'User-Agent': 'Your Name (your.email@example.com)'})
     tree = lxml.html.fromstring(response.content)

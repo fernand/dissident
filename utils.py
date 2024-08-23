@@ -7,34 +7,29 @@ from functools import wraps
 
 import openai
 
-OPENAI_API_KEY = "sk-svcacct-Rm8mE1eL2npMQ90EYva-orGqH5LAIJ2zTKrgIG1HvWOZ05SJivT3BlbkFJKfXMhhcq72cc3p9jkourbUTO4cCSagzuAKzrGaKDKp7ToPxYMA"
-PERPLEXITY_API_KEY = "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"
+OPENAI_API_KEY = 'sk-svcacct-Rm8mE1eL2npMQ90EYva-orGqH5LAIJ2zTKrgIG1HvWOZ05SJivT3BlbkFJKfXMhhcq72cc3p9jkourbUTO4cCSagzuAKzrGaKDKp7ToPxYMA'
+PERPLEXITY_API_KEY = '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'
 
 openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
-perplexity_client = openai.OpenAI(api_key=PERPLEXITY_API_KEY, base_url="https://api.perplexity.ai")
+perplexity_client = openai.OpenAI(api_key=PERPLEXITY_API_KEY, base_url='https://api.perplexity.ai')
 
-def rate_limiter(calls_per_second):
-    """Rate limit decorator to restrict the function call rate to `calls_per_second`."""
+class RateLimiter:
+    def __init__(self, calls_per_second):
+        self.min_interval = 1.0 / calls_per_second
+        self.last_call_time = 0.0
 
-    min_interval = 1.0 / calls_per_second
-
-    def decorator(func):
-        last_call_time = [0.0]
-
+    def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             current_time = time.perf_counter()
-            elapsed = current_time - last_call_time[0]
-            if elapsed < min_interval:
-                sleep_time = min_interval - elapsed
+            elapsed = current_time - self.last_call_time
+            if elapsed < self.min_interval:
+                sleep_time = self.min_interval - elapsed
                 time.sleep(sleep_time)
-
-            last_call_time[0] = time.perf_counter()
+            self.last_call_time = time.perf_counter()
             return func(*args, **kwargs)
 
         return wrapper
-
-    return decorator
 
 def retry_with_exponential_backoff(
     func,
@@ -73,24 +68,24 @@ def retry_with_exponential_backoff(
 def openai_chat_template(instruction, query_result):
     return [
         {
-            "role": "system",
-            "content": instruction,
+            'role': 'system',
+            'content': instruction,
         },
         {
-            "role": "user",
-            "content": query_result,
+            'role': 'user',
+            'content': query_result,
         },
     ]
 
 def perplexity_chat_template(message):
     return [
         {
-            "role": "system",
-            "content": "Be concise.",
+            'role': 'system',
+            'content': 'Be concise.',
         },
         {
-            "role": "user",
-            "content": message,
+            'role': 'user',
+            'content': message,
         },
     ]
 
@@ -106,7 +101,7 @@ def get_openai_response(client, instruction, query_result, format):
 @retry_with_exponential_backoff
 def get_perplexity_response(client, message):
     response = client.chat.completions.create(
-        model="llama-3.1-sonar-small-128k-online",
+        model='llama-3.1-sonar-small-128k-online',
         messages=perplexity_chat_template(message),
     )
     return response.choices[0].message.content
