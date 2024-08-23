@@ -110,15 +110,29 @@ if __name__ == '__main__':
     #     return get_8k_forms(format_cik(str(company['cik'])))
     # utils.continue_doing(results_path, companies, query)
 
-    # with open('results_8kforms.pkl', 'rb') as f:
+    with open('results_8kforms.pkl', 'rb') as f:
+        forms = pickle.load(f)
+    for company in companies:
+        company['forms'] = forms[company['symbol']]
+    results_path = 'results_8kform_text.pkl'
+    def query(company):
+        texts = []
+        for form in company['forms']:
+            if form.has_502:
+                texts.append({'form': form, 'text': get_8k(form.url)})
+        return texts
+    utils.continue_doing(results_path, companies, query)
+
+    # import tiktoken
+    # encoding = tiktoken.encoding_for_model('gpt-4o')
+    # with open('results_8kform_text.pkl', 'rb') as f:
     #     forms = pickle.load(f)
-    # for company in companies:
-    #     company['forms'] = forms[company['symbol']]
-    # results_path = 'results_8ktext.pkl'
-    # def query(company):
-    #     texts = []
-    #     for form in company['forms']:
-    #         if form.has_502:
-    #             texts.append(get_8k(form.url))
-    #     return texts
-    # utils.continue_doing(results_path, companies, query)
+    # count = 0
+    # for company_forms in forms.values():
+    #     for form in company_forms:
+    #         if 'does not exist' in form['text]:
+    #             count += 1
+    #             break
+    #         # count += len(encoding.encode(text))
+    # print(len(texts))
+    # print(count)
