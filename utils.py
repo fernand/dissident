@@ -7,6 +7,7 @@ import traceback
 from functools import wraps
 
 import openai
+from tqdm import tqdm
 
 OPENAI_API_KEY = 'sk-svcacct-Rm8mE1eL2npMQ90EYva-orGqH5LAIJ2zTKrgIG1HvWOZ05SJivT3BlbkFJKfXMhhcq72cc3p9jkourbUTO4cCSagzuAKzrGaKDKp7ToPxYMA'
 PERPLEXITY_API_KEY = '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'
@@ -117,7 +118,7 @@ def continue_doing(results_path, companies, func):
     else:
         results = {}
 
-    for company in companies:
+    for company in tqdm(companies):
         symbol = company['symbol']
         if symbol in results:
             continue

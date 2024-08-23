@@ -137,5 +137,5 @@ def step_3_count_tokens():
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
     # step_1(companies)
-    # step_2(companies)
-    step_3_count_tokens()
+    step_2(companies)
+    # step_3_count_tokens()
