@@ -3,6 +3,7 @@ import os
 import pickle
 import random
 import time
+import traceback
 from functools import wraps
 
 import openai
@@ -40,26 +41,19 @@ def retry_with_exponential_backoff(
     errors: tuple = (openai.RateLimitError,),
 ):
     """Retry a function with exponential backoff."""
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         num_retries = 0
         delay = initial_delay
-
-        # Loop until a successful response or max_retries is hit or an exception is raised
         while True:
             try:
                 return func(*args, **kwargs)
-
-            # Retry on specific errors
             except errors as e:
                 num_retries += 1
                 if num_retries > max_retries:
                     raise Exception(f"Maximum number of retries ({max_retries}) exceeded.")
                 delay *= exponential_base * (1 + jitter * random.random())
                 time.sleep(delay)
-
-            # Raise exceptions for any errors not specified
             except Exception as e:
                 raise e
 
@@ -106,6 +100,7 @@ def get_perplexity_response(client, message):
     )
     return response.choices[0].message.content
 
+# From https://www.sec.gov/files/company_tickers_exchange.json
 def get_nasdaq_companies():
     companies = []
     with open('company_tickers_exchange.json') as f:
@@ -130,6 +125,7 @@ def continue_doing(results_path, companies, func):
             results[symbol] = func(company)
         except Exception as e:
             print(e)
+            traceback.print_exc()
             continue
         with open(results_path, 'wb') as f:
             pickle.dump(results, f)
