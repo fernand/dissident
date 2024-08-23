@@ -64,6 +64,39 @@ def get_8k(url):
     tree = lxml.html.fromstring(response.content)
     return get_text(tree)
 
+def step_1(companies):
+    def query(company):
+        return get_8k_forms(format_cik(str(company['cik'])))
+    results_path = 'results_8kforms.pkl'
+    utils.continue_doing(results_path, companies, query)
+
+def step_2(companies):
+    with open('results_8kforms.pkl', 'rb') as f:
+        forms = pickle.load(f)
+    for company in companies:
+        company['forms'] = forms[company['symbol']]
+    def query(company):
+        new_forms = []
+        for form in company['forms']:
+            if form.has_502:
+                new_forms.append({'form': form, 'text': get_8k(form.url)})
+        return new_forms
+    results_path = 'results_8kform_text.pkl'
+    utils.continue_doing(results_path, companies, query)
+
+def step_3_count_tokens():
+    import tiktoken
+    encoding = tiktoken.encoding_for_model('gpt-4o-mini')
+    system_prompt_len = len(encoding.encode(CEO_CHANGE_PROMPT))
+    with open('results_8kform_text.pkl', 'rb') as f:
+        forms = pickle.load(f)
+    count = 0
+    for company_forms in forms.values():
+        for form in company_forms:
+            count += system_prompt_len + len(encoding.encode(form['text']))
+    print('num M tokens', round(count / 1e6, 1))
+    print(f'GPT-4o-Mini cost: ${0.15 * count / 1e6}')
+
 class CEOChange(BaseModel):
     company_name: str
     previous_ceo_name: Optional[str]
@@ -83,59 +116,37 @@ class CEOChangeWithDate:
     previous_ceo_name: Optional[str]
     new_ceo_name: Optional[str]
 
-# TODO: Actually fetch all the 8k forms first then use the OpenAI Batch API.
-def process_forms(forms: list[Form]):
-    ceo_changes = []
-    for form in forms:
-        if not form.has_502:
-            continue
-        ceo_change = get_ceo_change(get_8k(form.url))
-        prev_ceo = ceo_change.previous_ceo_name if ceo_change.previous_ceo_name != 'null' else None
-        new_ceo = ceo_change.new_ceo_name if ceo_change.new_ceo_name != 'null' else None
-        if prev_ceo is None and new_ceo is None:
-            continue
-        ceo_changes.append(CEOChangeWithDate(
-            date=form.date,
-            previous_ceo_name=prev_ceo,
-            new_ceo_name=new_ceo,
-        ))
-    return ceo_changes
-
-def step_1(companies):
-    results_path = 'results_8kforms.pkl'
-    def query(company):
-        return get_8k_forms(format_cik(str(company['cik'])))
-    utils.continue_doing(results_path, companies, query)
-
-def step_2(companies):
-    with open('results_8kforms.pkl', 'rb') as f:
-        forms = pickle.load(f)
-    for company in companies:
-        company['forms'] = forms[company['symbol']]
-    results_path = 'results_8kform_text.pkl'
-    def query(company):
-        new_forms = []
-        for form in company['forms']:
-            if form.has_502:
-                new_forms.append({'form': form, 'text': get_8k(form.url)})
-        return new_forms
-    utils.continue_doing(results_path, companies, query)
-
-def step_3_count_tokens():
-    import tiktoken
-    encoding = tiktoken.encoding_for_model('gpt-4o-mini')
-    system_prompt_len = len(encoding.encode(CEO_CHANGE_PROMPT))
+def step_4(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
-    count = 0
-    for company_forms in forms.values():
-        for form in company_forms:
-            count += system_prompt_len + len(encoding.encode(form['text']))
-    print('num M tokens', round(count / 1e6, 1))
-    print(f'GPT-4o-Mini cost: ${0.15 * count / 1e6}')
+    filtered_companies = []
+    for company in companies:
+        # TODO: Change
+        if company['symbol'] in forms:
+            company['forms'] = forms[company['symbol']]
+            filtered_companies.append(company)
+    companies = [c for c in filtered_companies if c['symbol'] == 'MSFT']
+    def query(company):
+        ceo_changes = []
+        for form_dict in company['forms']:
+            form, text = form_dict['form'], form_dict['text']
+            ceo_change = get_ceo_change(text)
+            prev_ceo = ceo_change.previous_ceo_name if ceo_change.previous_ceo_name != 'null' else None
+            new_ceo = ceo_change.new_ceo_name if ceo_change.new_ceo_name != 'null' else None
+            if prev_ceo is None and new_ceo is None:
+                continue
+            ceo_changes.append(CEOChangeWithDate(
+                date=form.date,
+                previous_ceo_name=prev_ceo,
+                new_ceo_name=new_ceo,
+            ))
+        return ceo_changes
+    results_path = 'results_ceo_changes.pkl'
+    utils.continue_doing(results_path, companies, query)
 
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
     # step_1(companies)
     step_2(companies)
     # step_3_count_tokens()
+    # step_4(companies)
