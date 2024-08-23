@@ -124,7 +124,6 @@ def continue_doing(results_path, companies, func):
         try:
             results[symbol] = func(company)
         except Exception as e:
-            print(e)
             traceback.print_exc()
             continue
         with open(results_path, 'wb') as f:
