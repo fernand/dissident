@@ -29,7 +29,7 @@ def get_8k_forms(cik, cumul_urls=[]):
         for hit in current_hits:
             f1, f2 = hit['_id'].split(':')
             f1 = f1.replace('-', '')
-            url = '/'.join(('https://www.sec.gov/Archives/edgar/data/1633917', f1, f2))
+            url = '/'.join((f'https://www.sec.gov/Archives/edgar/data/{cik}', f1, f2))
             has_502 = ('items' in hit and '5.02' in hit['items']) or ('_source' in hit and '5.02' in hit['_source']['items'])
             if 'file_date' in hit:
                 file_date = hit['file_date']
