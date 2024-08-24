@@ -72,20 +72,6 @@ class CEOTenure(BaseModel):
     start_date: str
     end_date:str
 
-class CEOTenures(BaseModel):
-    ceo_tenures: list[CEOTenure]
-
-def step_1_5(companies):
-    def query(company):
-        return utils.get_openai_response(
-            utils.openai_client,
-            f"Name all the CEO tenures for {company['symbol']} with their start and end dates in YYYY-MM format.",
-            '',
-            CEOTenures,
-            model='gpt-4o-2024-08-06',
-        )
-    utils.continue_doing('results_ceo_tenure.pkl', companies, query)
-
 def step_2(companies):
     with open('results_8kforms.pkl', 'rb') as f:
         forms = pickle.load(f)
