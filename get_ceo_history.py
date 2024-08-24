@@ -133,22 +133,11 @@ class CEOChangeResult:
     previous_ceo_name: Optional[str]
     new_ceo_name: Optional[str]
 
-def step_4_get_section(companies):
+def create_section_batch(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
         company['forms'] = forms[company['symbol']]
-    def query(company):
-        sections = []
-        for form_dict in company['forms']:
-            form, text = form_dict['form'], form_dict['text']
-            if 'CEO' not in text and 'Chief Executive Officer' not in text:
-                continue
-            sections.append({'form': form, 'section': get_502_section(text)})
-        return sections
-    utils.continue_doing('results_502_section.pkl', companies, query)
-
-def create_section_batch(companies):
     batch = []
     for company in companies:
         last_date = None
@@ -181,8 +170,12 @@ def create_section_batch(companies):
                     'max_tokens': 1000,
                 }
             })
-    with open(f'get_section_batch{i}.jsonl', 'w') as f:
-        f.write('\n'.join([json.dumps(item) for item in batch]))
+    def chunks(l, n):
+        for i in range(0, n):
+            yield l[i::n]
+    for i, chunk in enumerate(chunks(batch, 6)):
+        with open(f'get_section_batch{i}.jsonl', 'w') as f:
+            f.write('\n'.join([json.dumps(item) for item in chunk]))
 
 def step_4(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
@@ -217,5 +210,4 @@ if __name__ == '__main__':
     # step_1_5(companies)
     # step_2(companies)
     # step_3_count_tokens()
-    # create_section_batch(companies)
-    step_4_get_section(companies)
+    create_section_batch(companies)
