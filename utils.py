@@ -136,3 +136,5 @@ def continue_doing(results_path, companies, func, save_every=5):
             with open(results_path, 'wb') as f:
                 pickle.dump(results, f)
             count = 0
+    with open(results_path, 'wb') as f:
+        pickle.dump(results, f)
