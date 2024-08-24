@@ -138,3 +138,7 @@ def continue_doing(results_path, companies, func, save_every=5):
             count = 0
     with open(results_path, 'wb') as f:
         pickle.dump(results, f)
+
+def chunks(l, n):
+    for i in range(0, n):
+        yield l[i::n]

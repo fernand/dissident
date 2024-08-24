@@ -81,7 +81,7 @@ def step_2(companies):
 EXTRACT_SECTION_PROMPT = """In the 8-K form, extract the Item 5.02 section only."""
 CEO_CHANGE_PROMPT = """Identify whether there is a change of Chief Executive Officer. If there is no change, return empty values. If there is a change, find the name of the new CEO / Chief Executive Officer, and the name of the departing CEO. We are NOT interested in other offices than CEO, so ignore any other names linked to a role other than Chief Executive Officer."""
 
-def step_3_count_tokens():
+def step_3_count_form_tokens():
     import tiktoken
     encoding = tiktoken.encoding_for_model('gpt-4o-mini')
     system_prompt_len = len(encoding.encode(EXTRACT_SECTION_PROMPT))
@@ -94,7 +94,7 @@ def step_3_count_tokens():
     print('num M tokens', round(count / 1e6, 1))
     print(f'GPT-4o-Mini batched cost: ${round(0.15 / 2 * count / 1e6, 1)}')
 
-def create_section_batch(companies):
+def step_4_create_section_batch(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
@@ -131,19 +131,75 @@ def create_section_batch(companies):
                     'max_tokens': 1000,
                 }
             })
-    def chunks(l, n):
-        for i in range(0, n):
-            yield l[i::n]
-    for i, chunk in enumerate(chunks(batch, 5)):
+    for i, chunk in enumerate(utils.chunks(batch, 5)):
         with open(f'get_section_batch{i}.jsonl', 'w') as f:
             f.write('\n'.join([json.dumps(item) for item in chunk]))
 
-def create_ceo_change_batch():
-    pass
+def step_5_count_section_tokens():
+    import tiktoken
+    encoding = tiktoken.encoding_for_model('gpt-4o-2024-08-06')
+    system_prompt_len = len(encoding.encode(CEO_CHANGE_PROMPT))
+    count = 0
+    with open('batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl') as f:
+        for line in f:
+            section = json.loads(line.rstrip())['response']['body']['choices'][0]['message']['content']
+            if 'CEO' not in section and 'Chief Executive Officer' not in section:
+                continue
+            count += system_prompt_len + len(encoding.encode(section))
+    print('num M tokens', round(count / 1e6, 1))
+    print(f'GPT-4o batched cost: ${round(1.25 * count / 1e6, 1)}')
+
+def step_6_create_ceo_change_batch():
+    result_batch_files = [
+        'batch_9spadxw8qCibONWCC6VHpl5H_output.jsonl',
+        'batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl',
+        'batch_gEDtZXFWhsE4fQ7WJn5lY3PP_output.jsonl',
+        'batch_IynbsAdjLiDgF09mdu4QazHg_output.jsonl',
+        'batch_V15ZiTiMLAkTdoy41lnnlPUr_output.jsonl',
+    ]
+    batch = []
+    for batch_file in result_batch_files:
+        with open(batch_file) as f:
+            for line in f:
+                result = json.loads(line.rstrip())
+                section = result['response']['body']['choices'][0]['message']['content']
+                if 'CEO' not in section and 'Chief Executive Officer' not in section:
+                    continue
+                batch.append({
+                    'custom_id': result['custom_id'],
+                    'method': 'POST',
+                    'url': '/v1/chat/completions',
+                    'body': {
+                        'model': 'gpt-4o-2024-08-06',
+                        'messages': utils.openai_chat_template(CEO_CHANGE_PROMPT, section),
+                        'max_tokens': 1000,
+                        'response_format': {
+                            'type': 'json_schema',
+                            'json_schema': {
+                                'name': 'ceo_change',
+                                'schema': {
+                                    'type': 'object',
+                                    "properties": {
+                                        'previous_ceo_name': {'type': 'string'},
+                                        'new_ceo_name': {'type': 'string'},
+                                    },
+                                    'required': ['previous_ceo_name', 'new_ceo_name'],
+                                    'additionalProperties': False,
+                                },
+                                'strict': True,
+                            },
+                        },
+                    }
+                })
+    with open(f'get_ceo_change_batch.jsonl', 'w') as f:
+        f.write('\n'.join([json.dumps(item) for item in batch]))
 
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
     # step_1(companies)
     # step_2(companies)
-    # step_3_count_tokens()
-    create_section_batch(companies)
+    # step_3_count_form_tokens()
+    # step_4_create_section_batch(companies)
+    # step_5_count_section_tokens()
+    step_6_create_ceo_change_batch()
+
