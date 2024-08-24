@@ -151,14 +151,14 @@ def step_4(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
-        if company['symbol'] in forms:
-            company['forms'] = forms[company['symbol']]
-    companies = [c for c in companies if c['symbol'] == 'AAPL']
+        company['forms'] = forms[company['symbol']]
     def query(company):
         ceo_changes = []
         for form_dict in company['forms']:
             form, text = form_dict['form'], form_dict['text']
             section = get_502_section(text)
+            if 'CEO' not in section.text and 'Chief Executive Officer' not in section.text:
+                continue
             ceo_change = get_ceo_change(section.text)
             prev_ceo = ceo_change.previous_ceo_name if ceo_change.previous_ceo_name != 'null' else None
             new_ceo = ceo_change.new_ceo_name if ceo_change.new_ceo_name != 'null' else None
