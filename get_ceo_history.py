@@ -79,7 +79,6 @@ def step_2(companies):
     utils.continue_doing('results_8kform_text.pkl', companies, query)
 
 EXTRACT_SECTION_PROMPT = """In the 8-K form, extract the Item 5.02 section only."""
-CEO_CHANGE_PROMPT = """Identify whether there is a change of Chief Executive Officer. If there is no change, return empty values. If there is a change, find the name of the new CEO / Chief Executive Officer, and the name of the departing CEO. We are NOT interested in other offices than CEO, so ignore any other names linked to a role other than Chief Executive Officer."""
 
 def step_3_count_form_tokens():
     import tiktoken
@@ -135,30 +134,33 @@ def step_4_create_section_batch(companies):
         with open(f'get_section_batch{i}.jsonl', 'w') as f:
             f.write('\n'.join([json.dumps(item) for item in chunk]))
 
+CEO_CHANGE_PROMPT = """Identify whether there is a change of Chief Executive Officer. If there is no change, return empty values. If there is a change, find the name of the new CEO / Chief Executive Officer, and the name of the departing CEO. We are NOT interested in other offices than CEO, so ignore any other names linked to a role other than Chief Executive Officer."""
+RESULT_BATCH_FILES = [
+    'batch_9spadxw8qCibONWCC6VHpl5H_output.jsonl',
+    'batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl',
+    'batch_gEDtZXFWhsE4fQ7WJn5lY3PP_output.jsonl',
+    'batch_IynbsAdjLiDgF09mdu4QazHg_output.jsonl',
+    'batch_V15ZiTiMLAkTdoy41lnnlPUr_output.jsonl',
+]
+
 def step_5_count_section_tokens():
     import tiktoken
     encoding = tiktoken.encoding_for_model('gpt-4o-2024-08-06')
     system_prompt_len = len(encoding.encode(CEO_CHANGE_PROMPT))
     count = 0
-    with open('batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl') as f:
-        for line in f:
-            section = json.loads(line.rstrip())['response']['body']['choices'][0]['message']['content']
-            if 'CEO' not in section and 'Chief Executive Officer' not in section:
-                continue
-            count += system_prompt_len + len(encoding.encode(section))
+    for batch_file in RESULT_BATCH_FILES:
+        with open(batch_file) as f:
+            for line in f:
+                section = json.loads(line.rstrip())['response']['body']['choices'][0]['message']['content']
+                if 'CEO' not in section and 'Chief Executive Officer' not in section:
+                    continue
+                count += system_prompt_len + len(encoding.encode(section))
     print('num M tokens', round(count / 1e6, 1))
     print(f'GPT-4o batched cost: ${round(1.25 * count / 1e6, 1)}')
 
 def step_6_create_ceo_change_batch():
-    result_batch_files = [
-        'batch_9spadxw8qCibONWCC6VHpl5H_output.jsonl',
-        'batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl',
-        'batch_gEDtZXFWhsE4fQ7WJn5lY3PP_output.jsonl',
-        'batch_IynbsAdjLiDgF09mdu4QazHg_output.jsonl',
-        'batch_V15ZiTiMLAkTdoy41lnnlPUr_output.jsonl',
-    ]
     batch = []
-    for batch_file in result_batch_files:
+    for batch_file in RESULT_BATCH_FILES:
         with open(batch_file) as f:
             for line in f:
                 result = json.loads(line.rstrip())
@@ -201,5 +203,5 @@ if __name__ == '__main__':
     # step_3_count_form_tokens()
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
-    step_6_create_ceo_change_batch()
+    # step_6_create_ceo_change_batch()
 
