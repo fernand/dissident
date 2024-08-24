@@ -17,7 +17,7 @@ class Form:
     has_502: bool
 
 @utils.RateLimiter(calls_per_second=10)
-def get_8k_forms(cik, cumul_urls):
+def get_8k_metadata(cik, cumul_urls):
     url = f'https://efts.sec.gov/LATEST/search-index?from={len(cumul_urls)}&dateRange=custom&ciks={cik}&startdt=2001-01-01&forms=8-K'
     response = httpx.get(url, headers={'User-Agent': 'Chrome/128.0.0.0'})
     if response.status_code == 200:
@@ -35,7 +35,7 @@ def get_8k_forms(cik, cumul_urls):
                 file_date = hit['_source']['file_date']
             cumul_urls.append(Form(url, file_date, has_502))
         if total_hits - len(cumul_urls) > 0:
-            return get_8k_forms(cik, cumul_urls)
+            return get_8k_metadata(cik, cumul_urls)
         else:
             return cumul_urls
     else:
@@ -60,12 +60,12 @@ def get_8k(url):
     tree = lxml.html.fromstring(response.content)
     return get_text(tree)
 
-def step_1(companies):
+def step_1_get_8k_metadata(companies):
     def query(company):
-        return get_8k_forms(format_cik(str(company['cik'])), cumul_urls=[])
+        return get_8k_metadata(format_cik(str(company['cik'])), cumul_urls=[])
     utils.continue_doing('results_8kforms.pkl', companies, query)
 
-def step_2(companies):
+def step_2_get_8k_forms(companies):
     with open('results_8kforms.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
@@ -198,10 +198,11 @@ def step_6_create_ceo_change_batch():
 
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
-    # step_1(companies)
-    # step_2(companies)
+    # step_1_get_8k_metadata(companies)
+    # step_2_get_8k_forms(companies)
     # step_3_count_form_tokens()
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
     # step_6_create_ceo_change_batch()
+    # Gather all the step_4 batch result errors and manually look for CEO changes.
 
