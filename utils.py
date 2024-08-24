@@ -114,13 +114,14 @@ def get_nasdaq_companies():
                 companies.append({'cik': cik, 'name': company_name, 'symbol': symbol})
     return companies
 
-def continue_doing(results_path, companies, func):
+def continue_doing(results_path, companies, func, save_every=5):
     if os.path.exists(results_path):
         with open(results_path, 'rb') as f:
             results = pickle.load(f)
     else:
         results = {}
 
+    count = 0
     for company in tqdm(companies):
         symbol = company['symbol']
         if symbol in results:
@@ -130,5 +131,8 @@ def continue_doing(results_path, companies, func):
         except Exception as e:
             traceback.print_exc()
             continue
-        with open(results_path, 'wb') as f:
-            pickle.dump(results, f)
+        count += 1
+        if count == save_every:
+            with open(results_path, 'wb') as f:
+                pickle.dump(results, f)
+            count = 0
