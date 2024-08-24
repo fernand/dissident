@@ -9,8 +9,6 @@ from pydantic import BaseModel
 
 import utils
 
-CEO_CHANGE_PROMPT = """Find the name of the company which is filing the 8-K document. For that company, look for any change of CEO / Chief Executive Officer (and **ONLY** this office) in the Item 5.02 section. Then find (if any) the departing and new CEO names."""
-
 def format_cik(cik):
     return '0' * (10 - len(cik)) + cik
 
@@ -101,10 +99,14 @@ def step_2(companies):
         return new_forms
     utils.continue_doing('results_8kform_text.pkl', companies, query)
 
+
+EXTRACT_SECTION_PROMPT = """In the 8-K form, extract the Item 5.02 section only."""
+CEO_CHANGE_PROMPT = """Identify whether there is a change of Chief Executive Officer. If there is no change, return empty values. If there is a change, find the name of the new CEO / Chief Executive Officer, and the name of the departing CEO. We are NOT interested in other offices than CEO, so ignore any other names linked to a role other than Chief Executive Officer."""
+
 def step_3_count_tokens():
     import tiktoken
     encoding = tiktoken.encoding_for_model('gpt-4o-mini')
-    system_prompt_len = len(encoding.encode(CEO_CHANGE_PROMPT))
+    system_prompt_len = len(encoding.encode(EXTRACT_SECTION_PROMPT))
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
     count = 0
@@ -114,8 +116,18 @@ def step_3_count_tokens():
     print('num M tokens', round(count / 1e6, 1))
     print(f'GPT-4o-Mini cost: ${round(0.15 * count / 1e6, 1)}')
 
+class Section(BaseModel):
+    text: str
+
+def get_502_section(text):
+    return utils.get_openai_response(
+        utils.openai_client,
+        EXTRACT_SECTION_PROMPT,
+        text,
+        Section,
+    )
+
 class CEOChange(BaseModel):
-    company_name: str
     previous_ceo_name: Optional[str]
     new_ceo_name: Optional[str]
 
@@ -125,11 +137,13 @@ def get_ceo_change(text):
         CEO_CHANGE_PROMPT,
         text,
         CEOChange,
+        model='gpt-4o-2024-08-06',
     )
 
 @dataclass
-class CEOChangeWithDate:
+class CEOChangeResult:
     date: str
+    section: str
     previous_ceo_name: Optional[str]
     new_ceo_name: Optional[str]
 
@@ -137,22 +151,27 @@ def step_4(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
-        company['forms'] = forms[company['symbol']]
-    companies = [c for c in companies if c['symbol'] == 'MSFT']
+        if company['symbol'] in forms:
+            company['forms'] = forms[company['symbol']]
+    companies = [c for c in companies if c['symbol'] == 'AAPL']
     def query(company):
         ceo_changes = []
         for form_dict in company['forms']:
             form, text = form_dict['form'], form_dict['text']
-            ceo_change = get_ceo_change(text)
+            section = get_502_section(text)
+            ceo_change = get_ceo_change(section.text)
             prev_ceo = ceo_change.previous_ceo_name if ceo_change.previous_ceo_name != 'null' else None
             new_ceo = ceo_change.new_ceo_name if ceo_change.new_ceo_name != 'null' else None
             if prev_ceo is None and new_ceo is None:
                 continue
-            ceo_changes.append(CEOChangeWithDate(
+            change = CEOChangeResult(
                 date=form.date,
+                section=section,
                 previous_ceo_name=prev_ceo,
                 new_ceo_name=new_ceo,
-            ))
+            )
+            print(form.url, change)
+            ceo_changes.append(change)
         return ceo_changes
     utils.continue_doing('results_ceo_changes.pkl', companies, query)
 
@@ -161,5 +180,5 @@ if __name__ == '__main__':
     # step_1(companies)
     # step_1_5(companies)
     # step_2(companies)
-    step_3_count_tokens()
-    # step_4(companies)
+    # step_3_count_tokens()
+    step_4(companies)
