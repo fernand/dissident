@@ -77,7 +77,7 @@ class CEOTenure(BaseModel):
 class CEOTenures(BaseModel):
     ceo_tenures: list[CEOTenure]
 
-def step_2(companies):
+def step_1_5(companies):
     def query(company):
         return utils.get_openai_response(
             utils.openai_client,
@@ -88,7 +88,7 @@ def step_2(companies):
         )
     utils.continue_doing('results_ceo_tenure.pkl', companies, query)
 
-def step_2_bis(companies):
+def step_2(companies):
     with open('results_8kforms.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
@@ -159,7 +159,7 @@ def step_4(companies):
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
     # step_1(companies)
+    # step_1_5(companies)
     step_2(companies)
-    # step_2_bis(companies)
     # step_3_count_tokens()
     # step_4(companies)
