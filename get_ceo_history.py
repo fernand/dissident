@@ -21,7 +21,7 @@ class Form:
     has_502: bool
 
 @utils.RateLimiter(calls_per_second=10)
-def get_8k_forms(cik, cumul_urls=[]):
+def get_8k_forms(cik, cumul_urls):
     url = f'https://efts.sec.gov/LATEST/search-index?from={len(cumul_urls)}&dateRange=custom&ciks={cik}&startdt=2001-01-01&forms=8-K'
     response = httpx.get(url, headers={'User-Agent': 'Chrome/128.0.0.0'})
     if response.status_code == 200:
@@ -67,10 +67,28 @@ def get_8k(url):
 def step_1(companies):
     def query(company):
         return get_8k_forms(format_cik(str(company['cik'])), cumul_urls=[])
-    results_path = 'results_8kforms.pkl'
-    utils.continue_doing(results_path, companies, query)
+    utils.continue_doing('results_8kforms.pkl', companies, query)
+
+class CEOTenure(BaseModel):
+    ceo_name: str
+    start_date: str
+    end_date:str
+
+class CEOTenures(BaseModel):
+    ceo_tenures: list[CEOTenure]
 
 def step_2(companies):
+    def query(company):
+        return utils.get_openai_response(
+            utils.openai_client,
+            f"Name all the CEO tenures for {company['symbol']} with their start and end dates in YYYY-MM format.",
+            '',
+            CEOTenures,
+            model='gpt-4o-2024-08-06',
+        )
+    utils.continue_doing('results_ceo_tenure.pkl', companies, query)
+
+def step_2_bis(companies):
     with open('results_8kforms.pkl', 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
@@ -81,8 +99,7 @@ def step_2(companies):
             if form.has_502:
                 new_forms.append({'form': form, 'text': get_8k(form.url)})
         return new_forms
-    results_path = 'results_8kform_text.pkl'
-    utils.continue_doing(results_path, companies, query)
+    utils.continue_doing('results_8kform_text.pkl', companies, query)
 
 def step_3_count_tokens():
     import tiktoken
@@ -119,13 +136,9 @@ class CEOChangeWithDate:
 def step_4(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
-    filtered_companies = []
     for company in companies:
-        # TODO: Change
-        if company['symbol'] in forms:
-            company['forms'] = forms[company['symbol']]
-            filtered_companies.append(company)
-    companies = [c for c in filtered_companies if c['symbol'] == 'MSFT']
+        company['forms'] = forms[company['symbol']]
+    companies = [c for c in companies if c['symbol'] == 'MSFT']
     def query(company):
         ceo_changes = []
         for form_dict in company['forms']:
@@ -141,12 +154,12 @@ def step_4(companies):
                 new_ceo_name=new_ceo,
             ))
         return ceo_changes
-    results_path = 'results_ceo_changes.pkl'
-    utils.continue_doing(results_path, companies, query)
+    utils.continue_doing('results_ceo_changes.pkl', companies, query)
 
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
-    step_1(companies)
-    # step_2(companies)
+    # step_1(companies)
+    step_2(companies)
+    # step_2_bis(companies)
     # step_3_count_tokens()
     # step_4(companies)

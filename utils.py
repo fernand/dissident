@@ -61,16 +61,19 @@ def retry_with_exponential_backoff(
     return wrapper
 
 def openai_chat_template(instruction, query_result):
-    return [
+    template = [
         {
             'role': 'system',
             'content': instruction,
         },
-        {
+    ]
+    if len(query_result) == 0:
+        return template
+    template.append({
             'role': 'user',
             'content': query_result,
-        },
-    ]
+    })
+    return template
 
 def perplexity_chat_template(message):
     return [
@@ -85,9 +88,9 @@ def perplexity_chat_template(message):
     ]
 
 @retry_with_exponential_backoff
-def get_openai_response(client, instruction, query_result, format):
+def get_openai_response(client, instruction, query_result, format, model='gpt-4o-mini'):
     completion = client.beta.chat.completions.parse(
-        model='gpt-4o-mini',
+        model=model,
         messages=openai_chat_template(instruction, query_result),
         response_format=format,
     )
