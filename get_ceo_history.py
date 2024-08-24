@@ -133,6 +133,57 @@ class CEOChangeResult:
     previous_ceo_name: Optional[str]
     new_ceo_name: Optional[str]
 
+def step_4_get_section(companies):
+    with open('results_8kform_text.pkl', 'rb') as f:
+        forms = pickle.load(f)
+    for company in companies:
+        company['forms'] = forms[company['symbol']]
+    def query(company):
+        sections = []
+        for form_dict in company['forms']:
+            form, text = form_dict['form'], form_dict['text']
+            if 'CEO' not in text and 'Chief Executive Officer' not in text:
+                continue
+            sections.append({'form': form, 'section': get_502_section(text)})
+        return sections
+    utils.continue_doing('results_502_section.pkl', companies, query)
+
+def create_section_batch(companies):
+    batch = []
+    for company in companies:
+        last_date = None
+        i = 0
+        for form_dict in company['forms']:
+            form, text = form_dict['form'], form_dict['text']
+            if 'CEO' not in text and 'Chief Executive Officer' not in text:
+                continue
+            if form.date == last_date:
+                i += 1
+            else:
+                i = 0
+            last_date = form.date
+            batch.append({
+                'custom_id': f'{company['symbol']}_{form.date}_{i}',
+                'method': 'POST',
+                'url': '/v1/chat/completions',
+                'body': {
+                    'model': 'gpt-4o-mini',
+                    'messages': [
+                        {
+                            'role': 'system',
+                            'content': EXTRACT_SECTION_PROMPT,
+                        },
+                        {
+                            'role': 'user',
+                            'content': text,
+                        }
+                    ],
+                    'max_tokens': 1000,
+                }
+            })
+    with open(f'get_section_batch{i}.jsonl', 'w') as f:
+        f.write('\n'.join([json.dumps(item) for item in batch]))
+
 def step_4(companies):
     with open('results_8kform_text.pkl', 'rb') as f:
         forms = pickle.load(f)
@@ -156,7 +207,6 @@ def step_4(companies):
                 previous_ceo_name=prev_ceo,
                 new_ceo_name=new_ceo,
             )
-            print(form.url, change)
             ceo_changes.append(change)
         return ceo_changes
     utils.continue_doing('results_ceo_changes.pkl', companies, query)
@@ -167,4 +217,5 @@ if __name__ == '__main__':
     # step_1_5(companies)
     # step_2(companies)
     # step_3_count_tokens()
-    step_4(companies)
+    # create_section_batch(companies)
+    step_4_get_section(companies)
