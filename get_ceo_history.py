@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 import lxml.html
 import httpx
-import openai
 
 import utils
 
@@ -201,7 +200,7 @@ def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
     no_data_companies = set([
         'QQQ', 'LSXMA', 'LION', 'LGIH', 'SVA', 'VSLAX', 'TBLD', 'CCIX', 'ALF', 'CUB', 'CPZ',
-        'MACI', 'CTOR', 'HPAI', 'PTMN', 'SHMD', 'PIIVX', 'RFAI',
+        'MACI', 'CTOR', 'HPAI', 'PCSC', 'PTMN', 'SHMD', 'PIIVX', 'RFAI',
     ])
     companies = [c for c in companies if c['symbol'] not in no_data_companies]
     @utils.retry_with_exponential_backoff
@@ -211,7 +210,7 @@ def step_7_get_yahoo_executives(companies):
         page.wait_for_selector("table", timeout=5000)
         table_html = page.inner_html("table")
         if 'your patience' in table_html:
-            raise openai.RateLimitError("Rate limited", 0, 0)
+            raise utils.RateLimitError()
         elif not table_html.startswith('<thead>'):
             print(table_html)
             raise Exception(f'{symbol}: did not get table')

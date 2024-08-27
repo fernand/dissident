@@ -33,13 +33,16 @@ class RateLimiter:
 
         return wrapper
 
+class RateLimitError(Exception):
+    pass
+
 def retry_with_exponential_backoff(
     func,
     initial_delay: float = 1,
     exponential_base: float = 2,
     jitter: bool = True,
     max_retries: int = 10,
-    errors: tuple = (openai.RateLimitError,),
+    errors: tuple = (openai.RateLimitError, RateLimitError),
 ):
     """Retry a function with exponential backoff."""
     @wraps(func)
