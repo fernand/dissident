@@ -200,8 +200,9 @@ def step_6_create_ceo_change_batch():
 def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
     companies = [c for c in companies if c['symbol'] not in [
-        'QQQ', 'LSXMA', 'LION', 'LGIH', 'SVA', 'VSLAX', 'TBLD', 'CCIX', 'ALF', 'CUB', 'CPZ']
-    ]
+        'QQQ', 'LSXMA', 'LION', 'LGIH', 'SVA', 'VSLAX', 'TBLD', 'CCIX', 'ALF', 'CUB', 'CPZ'
+        'MACI', 'PTMN', 'SHMD', 'PIIVX', 'RFAI',
+    ]]
     @utils.retry_with_exponential_backoff
     @utils.RateLimiter(calls_per_second=0.4)
     def extract_table_html(page, symbol):
@@ -209,7 +210,7 @@ def step_7_get_yahoo_executives(companies):
         page.wait_for_selector("table", timeout=5000)
         table_html = page.inner_html("table")
         if 'your patience' in table_html:
-            raise openai.RateLimitError("Rate limited")
+            raise openai.RateLimitError("Rate limited", 0, 0)
         elif not table_html.startswith('<thead>'):
             print(table_html)
             raise Exception(f'{symbol}: did not get table')
