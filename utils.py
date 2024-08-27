@@ -9,8 +9,7 @@ from functools import wraps
 import openai
 from tqdm import tqdm
 
-OPENAI_API_KEY = 'sk-svcacct-Rm8mE1eL2npMQ90EYva-orGqH5LAIJ2zTKrgIG1HvWOZ05SJivT3BlbkFJKfXMhhcq72cc3p9jkourbUTO4cCSagzuAKzrGaKDKp7ToPxYMA'
-PERPLEXITY_API_KEY = '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'
+from api_config import *
 
 openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
 perplexity_client = openai.OpenAI(api_key=PERPLEXITY_API_KEY, base_url='https://api.perplexity.ai')

@@ -3,3 +3,4 @@
 __pycache__
 *.json
 *.jsonl
+api_config.py
