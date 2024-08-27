@@ -130,6 +130,7 @@ def continue_doing(results_path, companies, func, save_every=5):
             results[symbol] = func(company)
         except Exception as e:
             traceback.print_exc()
+            print(symbol, '\n')
             continue
         count += 1
         if count == save_every:
