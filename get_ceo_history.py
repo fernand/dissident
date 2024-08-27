@@ -112,7 +112,7 @@ def step_4_create_section_batch(companies):
                 i = 0
             last_date = form.date
             batch.append({
-                'custom_id': f'{company['symbol']}_{form.date}_{i}',
+                'custom_id': f"{company['symbol']}_{form.date}_{i}",
                 'method': 'POST',
                 'url': '/v1/chat/completions',
                 'body': {
@@ -197,12 +197,9 @@ def step_6_create_ceo_change_batch():
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
 def step_7_get_yahoo_executives(companies):
-    import random
     from playwright.sync_api import sync_playwright
     def extract_table_html(symbol):
-        page = browser.new_page(
-            user_agent=f'Chrome/{random.randint(0, 256)}.{random.randint(0, 16)}.{random.randint(0, 16)}.0'
-        )
+        page = browser.new_page()
         page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/')
         page.wait_for_selector("table")
         table_html = page.inner_html("table")
