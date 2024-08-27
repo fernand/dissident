@@ -210,7 +210,7 @@ def step_7_get_yahoo_executives(companies):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        @utils.RateLimiter(calls_per_second=0.5)
+        @utils.RateLimiter(calls_per_second=0.4)
         def query(company):
             return extract_table_html(page, company['symbol'])
         utils.continue_doing('results_yahoo_executives.pkl', companies, query)
