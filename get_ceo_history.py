@@ -197,20 +197,24 @@ def step_6_create_ceo_change_batch():
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
 def step_7_get_yahoo_executives(companies):
+    import random
     from playwright.sync_api import sync_playwright
-    def extract_table_html(page, symbol):
+    def extract_table_html(symbol):
+        page = browser.new_page(
+            user_agent=f'Chrome/{random.randint(0, 256)}.{random.randint(0, 16)}.{random.randint(0, 16)}.0'
+        )
         page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/')
         page.wait_for_selector("table")
         table_html = page.inner_html("table")
         if not table_html.startswith('<tbody>'):
+            print(table_html)
             raise Exception(f'{symbol}: did not get table')
         return table_html
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
         @utils.RateLimiter(calls_per_second=0.25)
         def query(company):
-            return extract_table_html(page, company['symbol'])
+            return extract_table_html(company['symbol'])
         utils.continue_doing('results_yahoo_executives.pkl', companies, query)
 
 if __name__ == '__main__':
@@ -223,4 +227,3 @@ if __name__ == '__main__':
     # step_6_create_ceo_change_batch()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     step_7_get_yahoo_executives(companies)
-
