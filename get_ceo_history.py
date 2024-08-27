@@ -198,18 +198,19 @@ def step_6_create_ceo_change_batch():
 
 def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
-    def extract_table_html(page, url):
-        page.goto(url)
+    def extract_table_html(page, symbol):
+        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/')
         page.wait_for_selector("table")
         table_html = page.inner_html("table")
+        if not table_html.startswith('<tbody>'):
+            raise Exception(f'{symbol}: did not get table')
         return table_html
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        @utils.RateLimiter(calls_per_second=10)
+        @utils.RateLimiter(calls_per_second=0.25)
         def query(company):
-            url = f'https://finance.yahoo.com/quote/{company['symbol']}/profile/'
-            return extract_table_html(page, url)
+            return extract_table_html(page, company['symbol'])
         utils.continue_doing('results_yahoo_executives.pkl', companies, query)
 
 if __name__ == '__main__':

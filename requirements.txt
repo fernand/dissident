@@ -1,3 +1,5 @@
+httpx
 lxml
 openai
+playwright
 tiktoken
