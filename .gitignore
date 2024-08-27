@@ -1,5 +1,5 @@
 ﻿venv
 *.pkl
 __pycache__
-company_tickers_exchange.json
+*.json
 *.jsonl

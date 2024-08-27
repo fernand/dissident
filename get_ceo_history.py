@@ -198,12 +198,6 @@ def step_6_create_ceo_change_batch():
 
 def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
-    no_data_companies = set([
-        'QQQ', 'LSXMA', 'LION', 'SVA', 'VSLAX', 'TBLD', 'CCIX', 'ALF', 'CUB', 'CPZ',
-        'MACI', 'CTOR', 'HPAI', 'PCSC', 'SHMD', 'PIIVX', 'RFAI', 'PITA', 'CAPT', 'VSTE',
-        'CUBA', 'ESGL', 'AIEV', 'MKDW',
-    ])
-    companies = [c for c in companies if c['symbol'] not in no_data_companies]
     @utils.retry_with_exponential_backoff
     @utils.RateLimiter(calls_per_second=0.4)
     def extract_table_html(page, symbol):
