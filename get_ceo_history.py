@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import lxml.html
 import httpx
+import openai
 
 import utils
 
@@ -198,19 +199,24 @@ def step_6_create_ceo_change_batch():
 
 def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
-    companies = [c for c in companies if c['symbol'] not in ['QQQ', 'LSXMA']]
+    companies = [c for c in companies if c['symbol'] not in [
+        'QQQ', 'LSXMA', 'LION', 'LGIH', 'SVA', 'VSLAX', 'TBLD', 'CCIX', 'ALF', 'CUB', 'CPZ']
+    ]
+    @utils.retry_with_exponential_backoff
+    @utils.RateLimiter(calls_per_second=0.4)
     def extract_table_html(page, symbol):
-        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/', timeout=10000)
-        page.wait_for_selector("table", timeout=10000)
+        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/')
+        page.wait_for_selector("table", timeout=5000)
         table_html = page.inner_html("table")
-        if not table_html.startswith('<thead>'):
+        if 'your patience' in table_html:
+            raise openai.RateLimitError("Rate limited")
+        elif not table_html.startswith('<thead>'):
             print(table_html)
             raise Exception(f'{symbol}: did not get table')
         return table_html
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        @utils.RateLimiter(calls_per_second=0.4)
         def query(company):
             return extract_table_html(page, company['symbol'])
         utils.continue_doing('results_yahoo_executives.pkl', companies, query)
