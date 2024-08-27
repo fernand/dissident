@@ -203,7 +203,7 @@ def step_7_get_yahoo_executives(companies):
         page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/')
         page.wait_for_selector("table")
         table_html = page.inner_html("table")
-        if not table_html.startswith('<tbody>'):
+        if not table_html.startswith('<thead>'):
             print(table_html)
             raise Exception(f'{symbol}: did not get table')
         return table_html
