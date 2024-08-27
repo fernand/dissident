@@ -200,7 +200,8 @@ def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
     no_data_companies = set([
         'QQQ', 'LSXMA', 'LION', 'LGIH', 'SVA', 'VSLAX', 'TBLD', 'CCIX', 'ALF', 'CUB', 'CPZ',
-        'MACI', 'CTOR', 'HPAI', 'PCSC', 'PTMN', 'SHMD', 'PIIVX', 'RFAI',
+        'MACI', 'CTOR', 'HPAI', 'PCSC', 'PTMN', 'SHMD', 'PIIVX', 'RFAI', 'PITA', 'CAPT', 'VSTE',
+        'CUBA', 'ESGL', 'AIEV',
     ])
     companies = [c for c in companies if c['symbol'] not in no_data_companies]
     @utils.retry_with_exponential_backoff
@@ -225,7 +226,7 @@ def step_7_get_yahoo_executives(companies):
 def step_8_create_yahoo_ceo_batch():
     batch = []
     with open('results_yahoo_executives.pkl', 'rb') as f:
-        company_tables = json.load(f)
+        company_tables = pickle.load(f)
     for symbol, table in company_tables.items():
         batch.append({
             'custom_id': symbol,
