@@ -200,8 +200,8 @@ def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
     companies = [c for c in companies if c['symbol'] not in ['QQQ', 'LSXMA']]
     def extract_table_html(page, symbol):
-        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/', timeout=5000)
-        page.wait_for_selector("table")
+        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/', timeout=10000)
+        page.wait_for_selector("table", timeout=10000)
         table_html = page.inner_html("table")
         if not table_html.startswith('<thead>'):
             print(table_html)
@@ -215,6 +215,43 @@ def step_7_get_yahoo_executives(companies):
             return extract_table_html(page, company['symbol'])
         utils.continue_doing('results_yahoo_executives.pkl', companies, query)
 
+def step_8_create_yahoo_ceo_batch():
+    batch = []
+    with open('results_yahoo_executives.pkl', 'rb') as f:
+        company_tables = json.load(f)
+    for symbol, table in company_tables.items():
+        batch.append({
+            'custom_id': symbol,
+            'method': 'POST',
+            'url': '/v1/chat/completions',
+            'body': {
+                'model': 'gpt-4o-mini',
+                'messages': utils.openai_chat_template(
+                    'Extract the CEO name and year born from the HTML table.',
+                    table
+                ),
+                'max_tokens': 1000,
+                'response_format': {
+                    'type': 'json_schema',
+                    'json_schema': {
+                        'name': 'ceo',
+                        'schema': {
+                            'type': 'object',
+                            "properties": {
+                                'ceo_name': {'type': 'string'},
+                                'year_born': {'type': 'string'},
+                            },
+                            'required': ['ceo_name', 'year_born'],
+                            'additionalProperties': False,
+                        },
+                        'strict': True,
+                    },
+                },
+            }
+        })
+    with open(f'get_yahoo_ceo_batch.jsonl', 'w') as f:
+        f.write('\n'.join([json.dumps(item) for item in batch]))
+
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
     # step_1_get_8k_metadata(companies)
@@ -225,3 +262,4 @@ if __name__ == '__main__':
     # step_6_create_ceo_change_batch()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     step_7_get_yahoo_executives(companies)
+    # step_8_create_yahoo_ceo_batch()
