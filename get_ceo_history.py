@@ -198,9 +198,9 @@ def step_6_create_ceo_change_batch():
 
 def step_7_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
-    companies = [c for c in companies if c['symbol'] not in ['QQQ']]
+    companies = [c for c in companies if c['symbol'] not in ['QQQ', 'LSXMA']]
     def extract_table_html(page, symbol):
-        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/')
+        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/', timeout=5000)
         page.wait_for_selector("table")
         table_html = page.inner_html("table")
         if not table_html.startswith('<thead>'):
