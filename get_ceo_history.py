@@ -1,6 +1,8 @@
 import json
 import pickle
+from collections import defaultdict
 from dataclasses import dataclass
+from typing import Optional
 
 import lxml.html
 import httpx
@@ -196,7 +198,26 @@ def step_6_create_ceo_change_batch():
     with open(f'get_ceo_change_batch.jsonl', 'w') as f:
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
-def step_7_get_yahoo_executives(companies):
+@dataclass
+class CEOChange:
+    date: str
+    prev_ceo_name: str
+    new_ceo_name: str
+
+def step_7_compile_ceo_changes():
+    ceo_changes = defaultdict(list)
+    with open('batch_emZcU36HP7rOi1JP0KBS9cSa_output.jsonl') as f:
+        for l in f:
+            result = json.loads(l.rstrip())
+            ticker, date, idx = result['custom_id'].split('_')
+            data = json.loads(result['response']['body']['choices'][0]['message']['content'])
+            prev_ceo_name, new_ceo_name = data['previous_ceo_name'], data['new_ceo_name']
+            if prev_ceo_name is not None or new_ceo_name is not None:
+                ceo_changes[ticker].append(CEOChange(date, prev_ceo_name, new_ceo_name))
+    with open('results_ceo_changes.pkl', 'wb') as f:
+        pickle.dump(ceo_changes, f)
+
+def step_8_get_yahoo_executives(companies):
     from playwright.sync_api import sync_playwright
     @utils.retry_with_exponential_backoff
     @utils.RateLimiter(calls_per_second=0.4)
@@ -217,7 +238,7 @@ def step_7_get_yahoo_executives(companies):
             return extract_table_html(page, company['symbol'])
         utils.continue_doing('results_yahoo_executives.pkl', companies, query)
 
-def step_8_create_yahoo_ceo_batch():
+def step_9_create_yahoo_ceo_batch():
     batch = []
     with open('results_yahoo_executives.pkl', 'rb') as f:
         company_tables = pickle.load(f)
@@ -262,6 +283,7 @@ if __name__ == '__main__':
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
     # step_6_create_ceo_change_batch()
+    # step_7_compile_ceo_changes()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
-    # step_7_get_yahoo_executives(companies)
-    step_8_create_yahoo_ceo_batch()
+    # step_8_get_yahoo_executives(companies)
+    step_9_create_yahoo_ceo_batch()
