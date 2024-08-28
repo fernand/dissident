@@ -229,12 +229,11 @@ def step_7_compile_ceo_changes():
         new_changes.append(changes[0])
         prev_change = new_changes[0]
         for change in changes[1:]:
-            # Compare last names.
-            prev_prev_ln = prev_change.prev_ceo_name.split(' ')[-1]
+            # Ignore the current change if the new CEO last name is the same as the
+            # previous CEO last name.
             prev_new_ln = prev_change.new_ceo_name.split(' ')[-1]
-            curr_prev_ln = change.prev_ceo_name.split(' ')[-1]
             curr_new_ln = change.new_ceo_name.split(' ')[-1]
-            if prev_prev_ln == curr_prev_ln and prev_new_ln == curr_new_ln:
+            if prev_new_ln == curr_new_ln:
                 continue
             new_changes.append(change)
             prev_change = change
