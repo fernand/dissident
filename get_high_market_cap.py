@@ -50,7 +50,7 @@ def step_1_get_tickers():
 def step_2_get_top_500():
     with open('results_ticker_info.pkl', 'rb') as f:
         results = pickle.load(f)
-    mr = [tinfo for tinfo in results if tinfo.market_cap is not None and tinfo.exchange == 'XNAS']
+    mr = [tinfo for tinfo in results if tinfo.market_cap is not None and tinfo.exchange == 'XNAS' and tinfo.type == 'CS']
     mr = sorted(mr, key=lambda r: r.market_cap, reverse=True)
     print(mr[:10])
 
