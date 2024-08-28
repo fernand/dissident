@@ -12,7 +12,6 @@ import api_config
 import n100
 
 API = f'apiKey={api_config.POLYGON_API_KEY}'
-DATE = '2024-08-27'
 
 def date_range(start_date, end_date):
     start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -63,15 +62,15 @@ async def get_close(client, semaphore, ticker, date):
         close_value = None
     return (date, close_value)
 
-async def get_historical_data(ticker, dates, num_concurrent=20):
+async def get_historical_data(ticker, dates, num_concurrent=10):
     semaphore = asyncio.Semaphore(num_concurrent)
     async with httpx.AsyncClient() as client:
         tasks = [get_close(client, semaphore, ticker, date) for date in dates]
         results = await asyncio.gather(*tasks)
     return results
 
-def step_1_get_tickers():
-    resp = httpx.get(f'https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/{DATE}?adjusted=true&{API}').json()
+def step_1_get_tickers(date):
+    resp = httpx.get(f'https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/{date}?adjusted=true&{API}').json()
     tickers = [r['T'] for r in resp['results']]
     results = asyncio.run(get_all_ticker_info(tickers))
     with open('results_ticker_info.pkl', 'wb') as f:
@@ -92,9 +91,9 @@ def step_3_get_historical_data(tickers, start_date, end_date):
         pickle.dump(results, f)
 
 if __name__ == '__main__':
-    # step_1_get_tickers()
+    # step_1_get_tickers('2024-08-27')
     # step_2_get_top_500()
-    # step_3_get_historical_data(n100.N100, '2019-8-30', '2024-08-27')
+    step_3_get_historical_data(n100.N100, '2019-8-29', '2024-08-27')
     # from get_ceo_history import CEOChange
     # with open('results_ceo_changes.pkl', 'rb') as f:
     #     changes = pickle.load(f)
