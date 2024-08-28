@@ -3,3 +3,4 @@ lxml
 openai
 playwright
 tiktoken
+tqdm

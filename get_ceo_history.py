@@ -263,5 +263,5 @@ if __name__ == '__main__':
     # step_5_count_section_tokens()
     # step_6_create_ceo_change_batch()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
-    step_7_get_yahoo_executives(companies)
-    # step_8_create_yahoo_ceo_batch()
+    # step_7_get_yahoo_executives(companies)
+    step_8_create_yahoo_ceo_batch()
