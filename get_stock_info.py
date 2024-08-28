@@ -11,7 +11,7 @@ from tqdm import tqdm
 import api_config
 import n100
 
-API = f'apiKey={api_config.POLYGON_API_KEY}'
+API_KEY = f'apiKey={api_config.POLYGON_API_KEY}'
 
 def date_range(start_date, end_date):
     start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -34,7 +34,7 @@ class TickerInfo:
 
 async def get_ticker_info(client, semaphore, ticker):
     async with semaphore:
-        resp = await client.get(f'https://api.polygon.io/v3/reference/tickers/{ticker}?{API}')
+        resp = await client.get(f'https://api.polygon.io/v3/reference/tickers/{ticker}?{API_KEY}')
     results = resp.json()['results']
     return TickerInfo(
         results['ticker'],
@@ -54,7 +54,7 @@ async def get_all_ticker_info(tickers, num_concurrent=10):
 
 async def get_close(client, semaphore, ticker, date):
     async with semaphore:
-        resp = await client.get(f'https://api.polygon.io/v1/open-close/{ticker}/{date}?adjusted=true&{API}')
+        resp = await client.get(f'https://api.polygon.io/v1/open-close/{ticker}/{date}?adjusted=true&{API_KEY}')
     results = resp.json()
     if 'close' in results:
         close_value = results['close']
@@ -70,7 +70,7 @@ async def get_historical_data(ticker, dates, num_concurrent=10):
     return results
 
 def step_1_get_tickers(date):
-    resp = httpx.get(f'https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/{date}?adjusted=true&{API}').json()
+    resp = httpx.get(f'https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/{date}?adjusted=true&{API_KEY}').json()
     tickers = [r['T'] for r in resp['results']]
     results = asyncio.run(get_all_ticker_info(tickers))
     with open('results_ticker_info.pkl', 'wb') as f:
@@ -94,7 +94,4 @@ if __name__ == '__main__':
     # step_1_get_tickers('2024-08-27')
     # step_2_get_top_500()
     step_3_get_historical_data(n100.N100, '2019-8-29', '2024-08-27')
-    # from get_ceo_history import CEOChange
-    # with open('results_ceo_changes.pkl', 'rb') as f:
-    #     changes = pickle.load(f)
     # changes = {t: c for t, c in changes.items() if t in n100.N100}
