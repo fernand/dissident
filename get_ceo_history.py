@@ -200,7 +200,7 @@ def step_6_create_ceo_change_batch():
 @dataclass
 class CEOChange:
     date: str
-    # In practice the two names are never None.
+    # The names can be an empty string.
     prev_ceo_name: str
     new_ceo_name: str
 
@@ -213,11 +213,32 @@ def step_7_compile_ceo_changes():
             data = json.loads(result['response']['body']['choices'][0]['message']['content'])
             prev_ceo_name, new_ceo_name = data['previous_ceo_name'], data['new_ceo_name']
             if (prev_ceo_name is not None and len(prev_ceo_name) != 0) or (new_ceo_name is not None and len(new_ceo_name) != 0):
+                if len(prev_ceo_name) != 0 and len(new_ceo_name) == 0:
+                    prev_ceo_name, new_ceo_name = new_ceo_name, prev_ceo_name
                 ceo_changes[ticker].append(CEOChange(date, prev_ceo_name, new_ceo_name))
     # Sort changes by date.
     ceo_changes = dict(ceo_changes)
     for ticker in ceo_changes:
         ceo_changes[ticker] = sorted(ceo_changes[ticker], key=lambda change: change.date)
+    # Do some merging.
+    for ticker in ceo_changes:
+        changes: list[CEOChange] = ceo_changes[ticker]
+        new_changes: list[CEOChange] = []
+        if len(changes) == 0:
+            continue
+        new_changes.append(changes[0])
+        prev_change = new_changes[0]
+        for change in changes[1:]:
+            # Compare last names.
+            prev_prev_ln = prev_change.prev_ceo_name.split(' ')[-1]
+            prev_new_ln = prev_change.new_ceo_name.split(' ')[-1]
+            curr_prev_ln = change.prev_ceo_name.split(' ')[-1]
+            curr_new_ln = change.new_ceo_name.split(' ')[-1]
+            if prev_prev_ln == curr_prev_ln and prev_new_ln == curr_new_ln:
+                continue
+            new_changes.append(change)
+            prev_change = change
+        ceo_changes[ticker] = new_changes
     with open('results_ceo_changes.pkl', 'wb') as f:
         pickle.dump(ceo_changes, f)
 
@@ -287,7 +308,7 @@ if __name__ == '__main__':
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
     # step_6_create_ceo_change_batch()
-    # step_7_compile_ceo_changes()
+    step_7_compile_ceo_changes()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     # step_8_get_yahoo_executives(companies)
     # step_9_create_yahoo_ceo_batch()

@@ -7,6 +7,7 @@ import httpx
 from tqdm.asyncio import tqdm_asyncio
 
 import api_config
+import n100
 
 API = f'apiKey={api_config.POLYGON_API_KEY}'
 DATE = '2024-08-27'
@@ -52,8 +53,11 @@ def step_2_get_top_500():
         results = pickle.load(f)
     mr = [tinfo for tinfo in results if tinfo.market_cap is not None and tinfo.exchange == 'XNAS' and tinfo.type == 'CS']
     mr = sorted(mr, key=lambda r: r.market_cap, reverse=True)
-    print(mr[:10])
 
 if __name__ == '__main__':
     # step_1_get_tickers()
-    step_2_get_top_500()
+    # step_2_get_top_500()
+    from get_ceo_history import CEOChange
+    with open('results_ceo_changes.pkl', 'rb') as f:
+        changes = pickle.load(f)
+    changes = {t: c for t, c in changes.items() if t in n100.N100}
