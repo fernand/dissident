@@ -2,6 +2,7 @@ import json
 import pickle
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import Optional
 
 import lxml.html
 import httpx
@@ -302,11 +303,11 @@ def step_9_create_yahoo_ceo_batch():
 @dataclass
 class CurrentCEO:
     name: str
-    year_born: str
+    year_born: Optional[str]
 
 def step_10_compile_yahoo_current_ceos():
     current_ceos = {}
-    with open('batches/.jsonl') as f:
+    with open('batches/batch_RylVMJyaTzkxcmhhZ6Mle9Y3_output.jsonl') as f:
         for l in f:
             result = json.loads(l.rstrip())
             ticker = result['custom_id']
@@ -315,8 +316,8 @@ def step_10_compile_yahoo_current_ceos():
             if len(ceo_name) == 0 or ceo_name is None:
                 print(ticker, ceo_name, year_born)
                 continue
-            if len(year_born) == 0 or year_born is None:
-                print(ticker, ceo_name, year_born)
+            if len(year_born) == 0:
+                year_born = None
             current_ceos[ticker] = CurrentCEO(ceo_name, year_born)
     with open('results_yahoo_current_ceos.pkl', 'wb') as f:
         pickle.dump(current_ceos, f)
@@ -345,5 +346,5 @@ if __name__ == '__main__':
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     # step_8_get_yahoo_executives(companies)
     # step_9_create_yahoo_ceo_batch()
-    step_10_compile_yahoo_current_ceos()
+    # step_10_compile_yahoo_current_ceos()
     step_11_merge_ceo_data()
