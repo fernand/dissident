@@ -133,16 +133,16 @@ def step_4_create_section_batch(companies):
                 }
             })
     for i, chunk in enumerate(utils.chunks(batch, 5)):
-        with open(f'get_section_batch{i}.jsonl', 'w') as f:
+        with open(f'batches/get_section_batch{i}.jsonl', 'w') as f:
             f.write('\n'.join([json.dumps(item) for item in chunk]))
 
 CEO_CHANGE_PROMPT = """Identify whether there is a change of Chief Executive Officer. If there is no change, return empty values. If there is a change, find the name of the new CEO / Chief Executive Officer, and the name of the departing CEO. We are NOT interested in other offices than CEO, so ignore any other names linked to a role other than Chief Executive Officer."""
 RESULT_BATCH_FILES = [
-    'batch_9spadxw8qCibONWCC6VHpl5H_output.jsonl',
-    'batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl',
-    'batch_gEDtZXFWhsE4fQ7WJn5lY3PP_output.jsonl',
-    'batch_IynbsAdjLiDgF09mdu4QazHg_output.jsonl',
-    'batch_V15ZiTiMLAkTdoy41lnnlPUr_output.jsonl',
+    'batches/batch_9spadxw8qCibONWCC6VHpl5H_output.jsonl',
+    'batches/batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl',
+    'batches/batch_gEDtZXFWhsE4fQ7WJn5lY3PP_output.jsonl',
+    'batches/batch_IynbsAdjLiDgF09mdu4QazHg_output.jsonl',
+    'batches/batch_V15ZiTiMLAkTdoy41lnnlPUr_output.jsonl',
 ]
 
 def step_5_count_section_tokens():
@@ -195,18 +195,18 @@ def step_6_create_ceo_change_batch():
                         },
                     }
                 })
-    with open(f'get_ceo_change_batch.jsonl', 'w') as f:
+    with open(f'batches/get_ceo_change_batch.jsonl', 'w') as f:
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
 @dataclass
 class CEOChange:
     date: str
-    prev_ceo_name: str
-    new_ceo_name: str
+    prev_ceo_name: Optional[str]
+    new_ceo_name: Optional[str]
 
 def step_7_compile_ceo_changes():
     ceo_changes = defaultdict(list)
-    with open('batch_emZcU36HP7rOi1JP0KBS9cSa_output.jsonl') as f:
+    with open('batches/batch_emZcU36HP7rOi1JP0KBS9cSa_output.jsonl') as f:
         for l in f:
             result = json.loads(l.rstrip())
             ticker, date, idx = result['custom_id'].split('_')
@@ -276,7 +276,7 @@ def step_9_create_yahoo_ceo_batch():
                 },
             }
         })
-    with open(f'get_yahoo_ceo_batch.jsonl', 'w') as f:
+    with open(f'batches/get_yahoo_ceo_batch.jsonl', 'w') as f:
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
 if __name__ == '__main__':
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
     # step_6_create_ceo_change_batch()
-    step_7_compile_ceo_changes()
+    # step_7_compile_ceo_changes()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     # step_8_get_yahoo_executives(companies)
     # step_9_create_yahoo_ceo_batch()
