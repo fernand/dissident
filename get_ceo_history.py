@@ -214,6 +214,10 @@ def step_7_compile_ceo_changes():
             prev_ceo_name, new_ceo_name = data['previous_ceo_name'], data['new_ceo_name']
             if prev_ceo_name is not None or new_ceo_name is not None:
                 ceo_changes[ticker].append(CEOChange(date, prev_ceo_name, new_ceo_name))
+    # Sort changes by date.
+    ceo_changes = dict(ceo_changes)
+    for ticker in ceo_changes:
+        ceo_changes[ticker] = sorted(ceo_changes[ticker], key=lambda change: change.date)
     with open('results_ceo_changes.pkl', 'wb') as f:
         pickle.dump(ceo_changes, f)
 
@@ -250,7 +254,7 @@ def step_9_create_yahoo_ceo_batch():
             'body': {
                 'model': 'gpt-4o-mini',
                 'messages': utils.openai_chat_template(
-                    'Extract the CEO name and year born from the HTML table.',
+                    'Extract the CEO (also known as Chief Executive Officer) name and year born from the HTML table.',
                     table
                 ),
                 'max_tokens': 1000,
