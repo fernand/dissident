@@ -212,7 +212,7 @@ def step_7_compile_ceo_changes():
             ticker, date, idx = result['custom_id'].split('_')
             data = json.loads(result['response']['body']['choices'][0]['message']['content'])
             prev_ceo_name, new_ceo_name = data['previous_ceo_name'], data['new_ceo_name']
-            if prev_ceo_name is not None or new_ceo_name is not None:
+            if (prev_ceo_name is not None and len(prev_ceo_name) != 0) or (new_ceo_name is not None and len(new_ceo_name) != 0):
                 ceo_changes[ticker].append(CEOChange(date, prev_ceo_name, new_ceo_name))
     # Sort changes by date.
     ceo_changes = dict(ceo_changes)
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
     # step_6_create_ceo_change_batch()
-    # step_7_compile_ceo_changes()
+    step_7_compile_ceo_changes()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     # step_8_get_yahoo_executives(companies)
-    step_9_create_yahoo_ceo_batch()
+    # step_9_create_yahoo_ceo_batch()
