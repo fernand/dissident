@@ -70,13 +70,6 @@ async def get_historical_data(ticker, dates, num_concurrent=20):
         results = await asyncio.gather(*tasks)
     return results
 
-def get_all_historical_data(tickers, start_date, end_date):
-    dates = date_range(start_date, end_date)
-    data = {}
-    for ticker in tqdm(tickers):
-        data[ticker] = asyncio.run(get_historical_data(ticker, dates))
-    return data
-
 def step_1_get_tickers():
     resp = httpx.get(f'https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/{DATE}?adjusted=true&{API}').json()
     tickers = [r['T'] for r in resp['results']]
@@ -90,15 +83,18 @@ def step_2_get_top_500():
     mr = [tinfo for tinfo in results if tinfo.market_cap is not None and tinfo.exchange == 'XNAS' and tinfo.type == 'CS']
     mr = sorted(mr, key=lambda r: r.market_cap, reverse=True)
 
-def step_3_get_historical_data(tickers):
-    results = get_all_historical_data(tickers, '2019-8-30', '2024-08-27')
+def step_3_get_historical_data(tickers, start_date, end_date):
+    dates = date_range(start_date, end_date)
+    results = {}
+    for ticker in tqdm(tickers):
+        results[ticker] = asyncio.run(get_historical_data(ticker, dates))
     with open('results_n100_historical.pkl', 'wb') as f:
         pickle.dump(results, f)
 
 if __name__ == '__main__':
     # step_1_get_tickers()
     # step_2_get_top_500()
-    step_3_get_historical_data(n100.N100)
+    # step_3_get_historical_data(n100.N100, '2019-8-30', '2024-08-27')
     # from get_ceo_history import CEOChange
     # with open('results_ceo_changes.pkl', 'rb') as f:
     #     changes = pickle.load(f)
