@@ -2,7 +2,6 @@ import json
 import pickle
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Optional
 
 import lxml.html
 import httpx
@@ -201,8 +200,9 @@ def step_6_create_ceo_change_batch():
 @dataclass
 class CEOChange:
     date: str
-    prev_ceo_name: Optional[str]
-    new_ceo_name: Optional[str]
+    # In practice the two names are never None.
+    prev_ceo_name: str
+    new_ceo_name: str
 
 def step_7_compile_ceo_changes():
     ceo_changes = defaultdict(list)
