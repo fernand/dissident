@@ -299,6 +299,40 @@ def step_9_create_yahoo_ceo_batch():
     with open(f'batches/get_yahoo_ceo_batch.jsonl', 'w') as f:
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
+@dataclass
+class CurrentCEO:
+    name: str
+    year_born: str
+
+def step_10_compile_yahoo_current_ceos():
+    current_ceos = {}
+    with open('batches/.jsonl') as f:
+        for l in f:
+            result = json.loads(l.rstrip())
+            ticker = result['custom_id']
+            data = json.loads(result['response']['body']['choices'][0]['message']['content'])
+            ceo_name, year_born = data['ceo_name'], data['year_born']
+            if len(ceo_name) == 0 or ceo_name is None:
+                print(ticker, ceo_name, year_born)
+                continue
+            if len(year_born) == 0 or year_born is None:
+                print(ticker, ceo_name, year_born)
+            current_ceos[ticker] = CurrentCEO(ceo_name, year_born)
+    with open('results_yahoo_current_ceos.pkl', 'wb') as f:
+        pickle.dump(current_ceos, f)
+
+def step_11_merge_ceo_data():
+    with open('results_ceo_changes.pkl', 'rb') as f:
+        ceo_changes: dict[str, list[CEOChange]] = pickle.load(f)
+    with open('results_yahoo_current_ceos.pkl', 'rb') as f:
+        current_ceos: dict[str, CurrentCEO] = pickle.load(f)
+    for ticker in current_ceos:
+        if ticker in ceo_changes:
+            last_ceo = ceo_changes[ticker][-1].new_ceo_name
+            yahoo_ceo = current_ceos[ticker].name
+            if last_ceo.split(' ')[-1] != yahoo_ceo.split(' ')[-1]:
+                print(ticker, last_ceo, yahoo_ceo)
+
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
     # step_1_get_8k_metadata(companies)
@@ -307,7 +341,9 @@ if __name__ == '__main__':
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
     # step_6_create_ceo_change_batch()
-    step_7_compile_ceo_changes()
+    # step_7_compile_ceo_changes()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     # step_8_get_yahoo_executives(companies)
     # step_9_create_yahoo_ceo_batch()
+    step_10_compile_yahoo_current_ceos()
+    step_11_merge_ceo_data()
