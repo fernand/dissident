@@ -323,6 +323,7 @@ def step_10_compile_yahoo_current_ceos():
         pickle.dump(current_ceos, f)
 
 def step_11_merge_ceo_data():
+    from n100 import N100
     with open('results_ceo_changes.pkl', 'rb') as f:
         ceo_changes: dict[str, list[CEOChange]] = pickle.load(f)
     with open('results_yahoo_current_ceos.pkl', 'rb') as f:
@@ -331,8 +332,8 @@ def step_11_merge_ceo_data():
         if ticker in ceo_changes:
             last_ceo = ceo_changes[ticker][-1].new_ceo_name
             yahoo_ceo = current_ceos[ticker].name
-            if last_ceo.split(' ')[-1] != yahoo_ceo.split(' ')[-1]:
-                print(ticker, last_ceo, yahoo_ceo)
+            if ticker in N100 and not last_ceo.split(' ')[-1] in yahoo_ceo and ticker not in ['GILD']:
+                print(' | '.join([ticker, last_ceo, yahoo_ceo]))
 
 if __name__ == '__main__':
     companies = utils.get_nasdaq_companies()
