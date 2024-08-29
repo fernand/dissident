@@ -93,16 +93,7 @@ def step_3_get_historical_data(tickers, start_date, end_date):
     with open('results_n100_historical.pkl', 'wb') as f:
         pickle.dump(results, f)
 
-def step_5_compare_performance():
-    pass
-
-if __name__ == '__main__':
-    start_dt, end_dt = '2022-08-29', '2024-08-27'
-    # step_1_get_tickers(start_dt)
-    # step_1_get_tickers(end_dt)
-    # step_2_get_top_500()
-    # step_3_get_historical_data(n100.N100, '2019-8-29', '2024-08-27')
-
+def compare_performance(start_dt, end_dt):
     from get_mba import MBAResult
     with open('results_n100_historical.pkl', 'rb') as f:
         historical_close: dict[str, tuple[str, float]] = pickle.load(f)
@@ -118,11 +109,13 @@ if __name__ == '__main__':
         mba_results: dict[str, MBAResult] = pickle.load(f)
 
     # Compare the average stock increase for MBA CEOs and no MBA CEOs.
-    to_exclude = set(['ARM', 'GEHC']) # Those N100 companies were not listed before.
+    to_exclude = set(['ARM', 'GEHC', 'HON']) # Those N100 companies were not listed before. For HON we don't have start market cap.
     @dataclass
     class Info:
         start_close: float
         end_close: float
+        start_market_cap: float
+        end_market_cap: float
         has_mba: bool
     infos = {}
     for ticker in n100.N100:
@@ -131,16 +124,36 @@ if __name__ == '__main__':
         infos[ticker] = Info(
             historical_close[ticker][start_dt],
             historical_close[ticker][end_dt],
+            start_ticker_info[ticker].market_cap,
+            end_ticker_info[ticker].market_cap,
             mba_results[ticker].ceo_has_mba
         )
-    mba_res, no_mba_res = [], []
-    for info in infos.values():
-        res = (info.end_close - info.start_close) / info.start_close
-        if info.has_mba:
-            mba_res.append(res)
-        else:
-            no_mba_res.append(res)
-    import numpy as np
-    print(round(np.mean(no_mba_res), 2), round(np.mean(mba_res), 2))
+    no_mba = {k: v for k, v in infos.items() if not v.has_mba}
+    top_valued = dict(sorted([(k, v) for k,v in infos.items()], key=lambda t: t[1].start_market_cap)[:62])
+    no_mba_shares, top_valued_shares = [], []
+    # Calculate the number of shares for each company.
+    def calc_weights(infos):
+        sum_market_cap = sum([i.start_market_cap for i in infos.values()])
+        weights = {}
+        for ticker, info in infos.items():
+            weights[ticker] = info.start_market_cap / sum_market_cap
+        return weights
+    def calc_returns(infos, weights):
+        returns = 0
+        for ticker, info in infos.items():
+            returns += (info.end_close - info.start_close) * weights[ticker]
+        return returns
+    no_mba_returns = calc_returns(no_mba, calc_weights(no_mba))
+    top_valued_returns = calc_returns(top_valued, calc_weights(top_valued))
+    print(f'no_mba:{round(no_mba_returns, 1)}', f'top_valued:{round(top_valued_returns, 1)}')
 
+if __name__ == '__main__':
+    start_dt, end_dt = '2022-08-29', '2024-08-27'
+    # start_dt, end_dt = '2023-08-28', '2024-08-27'
 
+    # step_1_get_tickers(start_dt)
+    # step_1_get_tickers(end_dt)
+    # step_2_get_top_500()
+    # step_3_get_historical_data(n100.N100, '2019-8-29', '2024-08-27')
+
+    compare_performance(start_dt, end_dt)
