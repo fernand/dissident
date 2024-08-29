@@ -140,7 +140,7 @@ def compare_performance(start_dt, end_dt):
     def calc_returns(infos, weights):
         returns = 0
         for ticker, info in infos.items():
-            returns += (info.end_close - info.start_close) * weights[ticker]
+            returns += weights[ticker] * (info.end_close - info.start_close) / info.start_close
         return returns
     no_mba_returns = calc_returns(no_mba, calc_weights(no_mba))
     top_valued_returns = calc_returns(top_valued, calc_weights(top_valued))
