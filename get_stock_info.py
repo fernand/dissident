@@ -99,10 +99,10 @@ def compare_performance(start_dt, end_dt):
         historical_close: dict[str, tuple[str, float]] = pickle.load(f)
         for ticker in historical_close:
             historical_close[ticker] = dict(historical_close[ticker])
-    with open(f'results_ticker_info_{end_dt}.pkl', 'rb') as f:
+    with open(f'results_ticker_info_{start_dt}.pkl', 'rb') as f:
         start_ticker_info: dict[str, TickerInfo] = pickle.load(f)
         start_ticker_info = {tinfo.ticker: tinfo for tinfo in start_ticker_info if tinfo is not None and tinfo.ticker in n100.N100}
-    with open(f'results_ticker_info_{start_dt}.pkl', 'rb') as f:
+    with open(f'results_ticker_info_{end_dt}.pkl', 'rb') as f:
         end_ticker_info: dict[str, TickerInfo] = pickle.load(f)
         end_ticker_info = {tinfo.ticker: tinfo for tinfo in end_ticker_info if tinfo is not None and tinfo.ticker in n100.N100}
     with open('results_mba_n100.pkl', 'rb') as f:
@@ -120,6 +120,8 @@ def compare_performance(start_dt, end_dt):
     infos = {}
     for ticker in n100.N100:
         if ticker in to_exclude:
+            continue
+        if ticker not in start_ticker_info:
             continue
         infos[ticker] = Info(
             historical_close[ticker][start_dt],
