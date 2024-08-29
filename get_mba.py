@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
+import n100
 import utils
 
 class CompanyName(BaseModel):
@@ -15,8 +16,7 @@ class CEOHasMBA(BaseModel):
 
 @dataclass
 class MBAResult:
-    symbol:str = None
-    company_name:str = None
+    ticker:str = None
     ceo_name:str = None
     ceo_has_mba:bool = None
     ceo_response:str = None
@@ -26,7 +26,7 @@ def ceo_mba_question(ceo_name, company_name):
     return f"Does {ceo_name}, CEO of {company_name} have an MBA or MBA like degree?"
 
 def mba_query(openai_client, perplexity_client, company):
-    ceo_mba_response = utils.get_perplexity_response(perplexity_client, ceo_mba_question(company['ceo_name'], company['name']))
+    ceo_mba_response = utils.get_perplexity_response(perplexity_client, ceo_mba_question(company['ceo_name'], company['symbol']))
     print(ceo_mba_response)
     ceo_has_mba = utils.get_openai_response(
         openai_client,
@@ -45,8 +45,8 @@ def mba_query(openai_client, perplexity_client, company):
     )
 
 if __name__ == '__main__':
-    results_path = 'results_mba.pkl'
-    companies = utils.get_nasdaq_companies()
+    results_path = 'results_mba_n100.pkl'
+    companies = [{'symbol': c[0], 'ceo_name': c[1]} for c in n100.CEOS]
     def query(company):
         return mba_query(utils.openai_client, utils.perplexity_client, company)
     utils.continue_doing(mba_query)
