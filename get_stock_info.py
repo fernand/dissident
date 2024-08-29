@@ -130,7 +130,6 @@ def compare_performance(start_dt, end_dt):
         )
     no_mba = {k: v for k, v in infos.items() if not v.has_mba}
     top_valued = dict(sorted([(k, v) for k,v in infos.items()], key=lambda t: t[1].start_market_cap)[:62])
-    no_mba_shares, top_valued_shares = [], []
     # Calculate the number of shares for each company.
     def calc_weights(infos):
         sum_market_cap = sum([i.start_market_cap for i in infos.values()])
@@ -145,15 +144,17 @@ def compare_performance(start_dt, end_dt):
         return returns
     no_mba_returns = calc_returns(no_mba, calc_weights(no_mba))
     top_valued_returns = calc_returns(top_valued, calc_weights(top_valued))
-    print(f'no_mba:{round(no_mba_returns, 1)}', f'top_valued:{round(top_valued_returns, 1)}')
+    print(f'{start_dt}:{end_dt}', f'no_mba:{round(no_mba_returns, 1)}', f'top_valued:{round(top_valued_returns, 1)}')
 
 if __name__ == '__main__':
-    start_dt, end_dt = '2022-08-29', '2024-08-27'
+    # start_dt, end_dt = '2022-08-29', '2024-08-27'
     # start_dt, end_dt = '2023-08-28', '2024-08-27'
-
     # step_1_get_tickers(start_dt)
     # step_1_get_tickers(end_dt)
     # step_2_get_top_500()
     # step_3_get_historical_data(n100.N100, '2019-8-29', '2024-08-27')
 
+    start_dt, end_dt = '2022-08-29', '2024-08-27'
+    compare_performance(start_dt, end_dt)
+    start_dt, end_dt = '2023-08-28', '2024-08-27'
     compare_performance(start_dt, end_dt)
