@@ -90,8 +90,8 @@ def perplexity_chat_template(message):
     ]
 
 @retry_with_exponential_backoff
-def get_openai_response(client, instruction, query_result, format, model='gpt-4o-mini'):
-    completion = client.beta.chat.completions.parse(
+def get_openai_response(instruction, query_result, format, model='gpt-4o-mini'):
+    completion = openai_client.beta.chat.completions.parse(
         model=model,
         messages=openai_chat_template(instruction, query_result),
         response_format=format,
@@ -99,8 +99,8 @@ def get_openai_response(client, instruction, query_result, format, model='gpt-4o
     return completion.choices[0].message.parsed
 
 @retry_with_exponential_backoff
-def get_perplexity_response(client, message):
-    response = client.chat.completions.create(
+def get_perplexity_response(message):
+    response = perplexity_client.chat.completions.create(
         model='llama-3.1-sonar-small-128k-online',
         messages=perplexity_chat_template(message),
     )
