@@ -152,8 +152,10 @@ if __name__ == '__main__':
     # step_1_get_tickers(start_dt)
     # step_1_get_tickers(end_dt)
     # step_2_get_top_500()
-    # step_3_get_historical_data(n100.N100, '2019-8-29', '2024-08-27')
+    # step_3_get_historical_data(n100.N100, '2019-09-03', '2024-08-27')
 
+    start_dt, end_dt = '2019-09-03', '2024-08-27'
+    compare_performance(start_dt, end_dt)
     start_dt, end_dt = '2022-08-29', '2024-08-27'
     compare_performance(start_dt, end_dt)
     start_dt, end_dt = '2023-08-28', '2024-08-27'
