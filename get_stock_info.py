@@ -106,6 +106,8 @@ if __name__ == '__main__':
     from get_mba import MBAResult
     with open('results_n100_historical.pkl', 'rb') as f:
         historical_close: dict[str, tuple[str, float]] = pickle.load(f)
+        for ticker in historical_close:
+            historical_close[ticker] = dict(historical_close[ticker])
     with open(f'results_ticker_info_{end_dt}.pkl', 'rb') as f:
         start_ticker_info: dict[str, TickerInfo] = pickle.load(f)
         start_ticker_info = {tinfo.ticker: tinfo for tinfo in start_ticker_info if tinfo is not None and tinfo.ticker in n100.N100}
@@ -113,5 +115,32 @@ if __name__ == '__main__':
         end_ticker_info: dict[str, TickerInfo] = pickle.load(f)
         end_ticker_info = {tinfo.ticker: tinfo for tinfo in end_ticker_info if tinfo is not None and tinfo.ticker in n100.N100}
     with open('results_mba_n100.pkl', 'rb') as f:
-        mba_results = pickle.load(f)
+        mba_results: dict[str, MBAResult] = pickle.load(f)
+
+    # Compare the average stock increase for MBA CEOs and no MBA CEOs.
+    to_exclude = set(['ARM', 'GEHC']) # Those N100 companies were not listed before.
+    @dataclass
+    class Info:
+        start_close: float
+        end_close: float
+        has_mba: bool
+    infos = {}
+    for ticker in n100.N100:
+        if ticker in to_exclude:
+            continue
+        infos[ticker] = Info(
+            historical_close[ticker][start_dt],
+            historical_close[ticker][end_dt],
+            mba_results[ticker].ceo_has_mba
+        )
+    mba_res, no_mba_res = [], []
+    for info in infos.values():
+        res = (info.end_close - info.start_close) / info.start_close
+        if info.has_mba:
+            mba_res.append(res)
+        else:
+            no_mba_res.append(res)
+    import numpy as np
+    print(round(np.mean(no_mba_res), 2), round(np.mean(mba_res), 2))
+
 
