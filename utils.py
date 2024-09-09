@@ -63,7 +63,7 @@ def retry_with_exponential_backoff(
 
     return wrapper
 
-def openai_chat_template(instruction, query_result) -> list[dict[str, str]]:
+def openai_chat_template(instruction: str, query_result: str) -> list[dict[str, str]]:
     template = [
         {
             'role': 'system',
