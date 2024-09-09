@@ -1,7 +1,6 @@
 import asyncio
 import pickle
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from typing import Optional
 
 import httpx
@@ -10,18 +9,9 @@ from tqdm import tqdm
 
 import api_config
 import n100
+import utils
 
 API_KEY = f'apiKey={api_config.POLYGON_API_KEY}'
-
-def date_range(start_date, end_date):
-    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-    dates = []
-    current_date = start_date
-    while current_date <= end_date:
-        dates.append(current_date.strftime('%Y-%m-%d'))
-        current_date += timedelta(days=1)
-    return dates
 
 @dataclass
 class TickerInfo:
@@ -86,7 +76,7 @@ def step_2_get_top_500():
     mr = sorted(mr, key=lambda r: r.market_cap, reverse=True)
 
 def step_3_get_historical_data(tickers, start_date, end_date):
-    dates = date_range(start_date, end_date)
+    dates = utils.date_range(start_date, end_date)
     results = {}
     for ticker in tqdm(tickers):
         results[ticker] = asyncio.run(get_historical_data(ticker, dates))
@@ -156,9 +146,12 @@ if __name__ == '__main__':
     # step_2_get_top_500()
     # step_3_get_historical_data(n100.N100, '2019-09-03', '2024-08-27')
 
-    start_dt, end_dt = '2019-09-03', '2024-08-27'
-    compare_performance(start_dt, end_dt)
-    start_dt, end_dt = '2022-08-29', '2024-08-27'
-    compare_performance(start_dt, end_dt)
-    start_dt, end_dt = '2023-08-28', '2024-08-27'
-    compare_performance(start_dt, end_dt)
+    # start_dt, end_dt = '2019-09-03', '2024-08-27'
+    # compare_performance(start_dt, end_dt)
+    # start_dt, end_dt = '2022-08-29', '2024-08-27'
+    # compare_performance(start_dt, end_dt)
+    # start_dt, end_dt = '2023-08-28', '2024-08-27'
+    # compare_performance(start_dt, end_dt)
+
+    pass
+

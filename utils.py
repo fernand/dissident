@@ -4,6 +4,7 @@ import pickle
 import random
 import time
 import traceback
+from datetime import datetime, timedelta
 from functools import wraps
 
 import openai
@@ -145,3 +146,13 @@ def continue_doing(results_path, companies, func, save_every=5):
 def chunks(l, n):
     for i in range(0, n):
         yield l[i::n]
+
+def date_range(start_date, end_date):
+    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+    dates = []
+    current_date = start_date
+    while current_date <= end_date:
+        dates.append(current_date.strftime('%Y-%m-%d'))
+        current_date += timedelta(days=1)
+    return dates
