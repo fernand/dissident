@@ -50,7 +50,7 @@ async def get_all_ticker_info(ticker_closes: list[tuple[str, float]], date: str,
         results = await asyncio.gather(*tasks)
     return results
 
-def get_date(date: str, blacklist: set[str]):
+def get_date(date: str, blacklist: set[str]) -> list[TickerInfo | NullTickerInfo]:
     resp = httpx.get(f'https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/{date}?adjusted=true&{API_KEY}').json()
     if resp['resultsCount'] == 0:
         return []
