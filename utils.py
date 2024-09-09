@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import pickle
@@ -58,6 +59,33 @@ def retry_with_exponential_backoff(
                     raise Exception(f"Maximum number of retries ({max_retries}) exceeded.")
                 delay *= exponential_base * (1 + jitter * random.random())
                 time.sleep(delay)
+            except Exception as e:
+                raise e
+
+    return wrapper
+
+def async_retry_with_exponential_backoff(
+    func,
+    initial_delay: float = 1,
+    exponential_base: float = 2,
+    jitter: bool = True,
+    max_retries: int = 10,
+    errors: tuple = (Exception, ),
+):
+    """Retry an async function with exponential backoff."""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        num_retries = 0
+        delay = initial_delay
+        while True:
+            try:
+                return await func(*args, **kwargs)
+            except errors as e:
+                num_retries += 1
+                if num_retries > max_retries:
+                    raise Exception(f"Maximum number of retries ({max_retries}) exceeded.")
+                delay *= exponential_base * (1 + jitter * random.random())
+                await asyncio.sleep(delay)
             except Exception as e:
                 raise e
 

@@ -25,6 +25,7 @@ class TickerInfo:
 class NullTickerInfo:
     ticker: str
 
+@utils.async_retry_with_exponential_backoff
 async def get_ticker_info(client: httpx.AsyncClient, semaphore: asyncio.Semaphore, ticker_close: tuple[str, float], date: str):
     ticker, close = ticker_close
     async with semaphore:
