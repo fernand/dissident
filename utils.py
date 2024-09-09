@@ -94,7 +94,7 @@ def perplexity_chat_template(message):
 def get_openai_response(instruction, query_result, format, model='gpt-4o-mini'):
     completion = openai_client.beta.chat.completions.parse(
         model=model,
-        messages=openai_chat_template(instruction, query_result),
+        messages=openai_chat_template(instruction, query_result), # type: ignore
         response_format=format,
     )
     return completion.choices[0].message.parsed
