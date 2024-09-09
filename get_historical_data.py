@@ -2,7 +2,6 @@ import asyncio
 import os
 import pickle
 from dataclasses import dataclass
-from typing import Optional
 
 import httpx
 import tqdm
@@ -17,10 +16,10 @@ class TickerInfo:
     ticker: str
     close: float
     exchange: str
-    cik: Optional[str]
-    type: str
+    cik: str | None
+    type: str | None
     active: bool
-    market_cap: Optional[int]
+    market_cap: int | None
 
 @dataclass
 class NullTickerInfo:
