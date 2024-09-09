@@ -54,7 +54,7 @@ async def get_all_ticker_info(ticker_closes: list[tuple[str, float]], date: str,
 def get_date(date: str, blacklist: set[str]):
     resp = httpx.get(f'https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/{date}?adjusted=true&{API_KEY}').json()
     if resp['resultsCount'] == 0:
-        return None
+        return []
     ticker_close = [(r['T'], r['c']) for r in resp['results'] if r['T'] not in blacklist]
     return asyncio.run(get_all_ticker_info(ticker_close, date))
 
