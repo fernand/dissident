@@ -15,7 +15,7 @@ API_KEY = f'apiKey={api_config.POLYGON_API_KEY}'
 class TickerInfo:
     ticker: str
     close: float
-    exchange: str
+    exchange: str | None
     cik: str | None
     type: str | None
     active: bool
@@ -36,7 +36,7 @@ async def get_ticker_info(client: httpx.AsyncClient, semaphore: asyncio.Semaphor
     return TickerInfo(
         results['ticker'],
         close,
-        results['primary_exchange'],
+        results['primary_exchange'] if 'primary_exchange' in results else None,
         results['cik'] if 'cik' in results else None,
         results['type'] if 'type' in results else None,
         results['active'],
