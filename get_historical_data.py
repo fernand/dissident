@@ -22,6 +22,7 @@ class TickerInfo:
     sic_description: str | None
     type: str | None
     market_cap: int | None
+    list_date: str | None
 
 @dataclass
 class NullTickerInfo:
@@ -46,6 +47,7 @@ async def get_ticker_info(client: httpx.AsyncClient, semaphore: asyncio.Semaphor
         results.get('sic_description'),
         results.get('type'),
         results.get('market_cap'),
+        results.get('list_date'),
     )
 
 async def get_all_ticker_info(ticker_closes: list[tuple[str, float]], date: str, num_concurrent=10):
