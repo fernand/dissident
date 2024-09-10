@@ -16,10 +16,10 @@ class CEOHasMBA(BaseModel):
 
 @dataclass
 class MBAResult:
-    ticker:str = None
-    ceo_name:str = None
-    ceo_has_mba:bool = None
-    ceo_mba_response:str = None
+    ticker:str|None = None
+    ceo_name:str|None = None
+    ceo_has_mba:bool|None = None
+    ceo_mba_response:str|None = None
 
 def ceo_mba_question(ceo_name, company_name):
     return f"Does {ceo_name}, CEO of {company_name} have an MBA or MBA like degree?"
@@ -45,5 +45,5 @@ if __name__ == '__main__':
     results_path = 'results_mba_n100.pkl'
     companies = [{'symbol': c[0], 'ceo_name': c[1]} for c in n100.CEOS]
     def query(company):
-        return mba_query(utils.openai_client, utils.perplexity_client, company)
+        return mba_query(company)
     utils.continue_doing('results_mba_n100.pkl', companies, mba_query)
