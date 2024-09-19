@@ -183,7 +183,7 @@ def step_6_create_ceo_change_batch():
                     'method': 'POST',
                     'url': '/v1/chat/completions',
                     'body': {
-                        'model': 'gpt-4o',
+                        'model': 'gpt-4o-2024-08-06',
                         'messages': utils.openai_chat_template(CEO_CHANGE_PROMPT, section),
                         'max_tokens': 1000,
                         'response_format': {
@@ -346,13 +346,13 @@ def step_11_merge_ceo_data():
                 print(' | '.join([ticker, last_ceo, yahoo_ceo]))
 
 if __name__ == '__main__':
-    companies = utils.get_nasdaq_companies()
+    # companies = utils.get_nasdaq_companies()
     # step_1_get_8k_metadata(companies)
     # step_2_get_8k_forms(companies)
     # step_3_count_form_tokens()
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
-    step_6_create_ceo_change_batch()
+    # step_6_create_ceo_change_batch()
     # step_7_compile_ceo_changes()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     # step_8_get_yahoo_executives(companies)
@@ -360,8 +360,8 @@ if __name__ == '__main__':
     # step_10_compile_yahoo_current_ceos()
     # step_11_merge_ceo_data()
 
-    # with open('delisted_companies.pkl', 'rb') as f:
-    #     companies = pickle.load(f)
+    with open('delisted_companies.pkl', 'rb') as f:
+        companies = pickle.load(f)
     # step_1_get_8k_metadata(companies, delisted=True)
     # step_2_get_8k_forms(companies, delisted=True)
-    # step_4_create_section_batch(companies, delisted=True)
+    step_4_create_section_batch(companies, delisted=True)
