@@ -89,5 +89,24 @@ def get_all_historical_data(start_date: str, end_date: str):
         with open('blacklist.pkl', 'wb') as f:
             pickle.dump(blacklist, f)
 
+# Get the companies for which we haven't fetched SEC filings for.
+def get_de_listed_companies():
+    with open('historical_data.pkl', 'rb') as f:
+        data = pickle.load(f)
+    blacklist = ['CSGP']
+    delisted_companies = {}
+    for date in data:
+        sorted_data = sorted(
+            data[date],
+            key=lambda info: info.market_cap if info.market_cap is not None and info.ticker not in blacklist else 0,
+            reverse=True,
+        )
+        for info in sorted_data[:300]:
+            if info.ticker not in delisted_companies and info.cik is not None:
+                delisted_companies[info.ticker] = {'symbol': info.ticker, 'cik': info.cik}
+    with open('delisted_companies.pkl', 'wb') as f:
+        pickle.dump(list(delisted_companies.values()), f)
+
 if __name__ == '__main__':
-    get_all_historical_data('2019-09-11', '2024-09-06')
+    # get_all_historical_data('2019-09-11', '2024-09-06')
+    get_de_listed_companies()

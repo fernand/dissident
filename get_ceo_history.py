@@ -62,13 +62,22 @@ def get_8k(url):
     tree = lxml.html.fromstring(response.content)
     return get_text(tree)
 
-def step_1_get_8k_metadata(companies):
+FORM_FNAME = {
+    True: 'results_8kforms_delisted.pkl',
+    False: 'results_8kforms.pkl',
+}
+FORM_TEXT_FNAME = {
+    True: 'results_8kform_text_delisted.pkl',
+    False: 'results_8kform_text.pkl',
+}
+
+def step_1_get_8k_metadata(companies, delisted=False):
     def query(company):
         return get_8k_metadata(format_cik(str(company['cik'])), cumul_urls=[])
-    utils.continue_doing('results_8kforms.pkl', companies, query)
+    utils.continue_doing(FORM_FNAME[delisted], companies, query)
 
-def step_2_get_8k_forms(companies):
-    with open('results_8kforms.pkl', 'rb') as f:
+def step_2_get_8k_forms(companies, delisted=False):
+    with open(FORM_FNAME[delisted], 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
         company['forms'] = forms[company['symbol']]
@@ -78,15 +87,15 @@ def step_2_get_8k_forms(companies):
             if form.has_502:
                 new_forms.append({'form': form, 'text': get_8k(form.url)})
         return new_forms
-    utils.continue_doing('results_8kform_text.pkl', companies, query)
+    utils.continue_doing(FORM_TEXT_FNAME[delisted], companies, query)
 
 EXTRACT_SECTION_PROMPT = """In the 8-K form, extract the Item 5.02 section only."""
 
-def step_3_count_form_tokens():
+def step_3_count_form_tokens(delisted=False):
     import tiktoken
     encoding = tiktoken.encoding_for_model('gpt-4o-mini')
     system_prompt_len = len(encoding.encode(EXTRACT_SECTION_PROMPT))
-    with open('results_8kform_text.pkl', 'rb') as f:
+    with open(FORM_TEXT_FNAME[delisted], 'rb') as f:
         forms = pickle.load(f)
     count = 0
     for company_forms in forms.values():
@@ -95,8 +104,8 @@ def step_3_count_form_tokens():
     print('num M tokens', round(count / 1e6, 1))
     print(f'GPT-4o-Mini batched cost: ${round(0.15 / 2 * count / 1e6, 1)}')
 
-def step_4_create_section_batch(companies):
-    with open('results_8kform_text.pkl', 'rb') as f:
+def step_4_create_section_batch(companies, delisted=False):
+    with open(FORM_TEXT_FNAME[delisted], 'rb') as f:
         forms = pickle.load(f)
     for company in companies:
         company['forms'] = forms[company['symbol']]
@@ -136,7 +145,7 @@ def step_4_create_section_batch(companies):
         with open(f'batches/get_section_batch{i}.jsonl', 'w') as f:
             f.write('\n'.join([json.dumps(item) for item in chunk]))
 
-CEO_CHANGE_PROMPT = """Identify whether there is a change of Chief Executive Officer. If there is no change, return empty values. If there is a change, find the name of the new CEO / Chief Executive Officer, and the name of the departing CEO. We are NOT interested in other offices than CEO, so ignore any other names linked to a role other than Chief Executive Officer."""
+CEO_CHANGE_PROMPT = """Did the company filing this 8-K form have a change of Chief Executive Office based on the following 5.02 section? If yes identify the previous CEO and the new CEO. Ignore any role changes which are not Chief Executive Officer."""
 RESULT_BATCH_FILES = [
     'batches/batch_9spadxw8qCibONWCC6VHpl5H_output.jsonl',
     'batches/batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl',
@@ -174,7 +183,7 @@ def step_6_create_ceo_change_batch():
                     'method': 'POST',
                     'url': '/v1/chat/completions',
                     'body': {
-                        'model': 'gpt-4o-2024-08-06',
+                        'model': 'gpt-4o',
                         'messages': utils.openai_chat_template(CEO_CHANGE_PROMPT, section),
                         'max_tokens': 1000,
                         'response_format': {
@@ -184,10 +193,11 @@ def step_6_create_ceo_change_batch():
                                 'schema': {
                                     'type': 'object',
                                     "properties": {
+                                        'has_ceo_change': {'type': 'boolean'},
                                         'previous_ceo_name': {'type': 'string'},
                                         'new_ceo_name': {'type': 'string'},
                                     },
-                                    'required': ['previous_ceo_name', 'new_ceo_name'],
+                                    'required': ['has_ceo_change', 'previous_ceo_name', 'new_ceo_name'],
                                     'additionalProperties': False,
                                 },
                                 'strict': True,
@@ -342,10 +352,16 @@ if __name__ == '__main__':
     # step_3_count_form_tokens()
     # step_4_create_section_batch(companies)
     # step_5_count_section_tokens()
-    # step_6_create_ceo_change_batch()
+    step_6_create_ceo_change_batch()
     # step_7_compile_ceo_changes()
     # Gather all the step_4 batch result errors and manually look for CEO changes.
     # step_8_get_yahoo_executives(companies)
     # step_9_create_yahoo_ceo_batch()
     # step_10_compile_yahoo_current_ceos()
-    step_11_merge_ceo_data()
+    # step_11_merge_ceo_data()
+
+    # with open('delisted_companies.pkl', 'rb') as f:
+    #     companies = pickle.load(f)
+    # step_1_get_8k_metadata(companies, delisted=True)
+    # step_2_get_8k_forms(companies, delisted=True)
+    # step_4_create_section_batch(companies, delisted=True)
