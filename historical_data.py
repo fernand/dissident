@@ -58,6 +58,9 @@ def get_all_historical_data(start_date: str, end_date: str):
     for date in tqdm.tqdm(utils.date_range(start_date, end_date)):
         if date in date_results:
             continue
+        # Hack if we don't want to wait for the middle data which is usually not needed.
+        # if date != end_date:
+        #     continue
         results = get_date(date, blacklist)
         filtered_results = []
         for info in results:
