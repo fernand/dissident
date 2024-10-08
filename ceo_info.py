@@ -56,6 +56,4 @@ if __name__ == '__main__':
         if ticker in top_tickers:
             companies.append({'ticker': ticker, 'ceo_name': current_ceo.name})
 
-    def query(company):
-        return mba_query(company)
     utils.continue_doing('results_mba.pkl', companies, mba_query)
