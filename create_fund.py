@@ -4,6 +4,15 @@ import historical_data
 from historical_data import TickerInfo
 from ceo_info import MBAResult
 
+def calc_returns(tickers: list[TickerInfo], start_data: dict[str, TickerInfo], end_data: dict[str, TickerInfo]):
+    sum_market_cap = sum([ti.market_cap for ti in tickers])
+    returns = 0
+    for tinfo in top_no_mba:
+        ticker = tinfo.ticker
+        weight = tinfo.market_cap / sum_market_cap
+        returns += weight * (end_data[ticker].close - start_data[ticker].close) / start_data[ticker].close
+    return returns
+
 if __name__ == '__main__':
     start_dt, end_dt = '2024-08-27', '2024-10-07'
     top_tickers = historical_data.get_top_tickers(start_dt, top_k=300)
@@ -20,11 +29,6 @@ if __name__ == '__main__':
             break
         if tinfo.ticker in results_mba and not results_mba[tinfo.ticker].ceo_has_mba:
             top_no_mba.append(tinfo)
+    no_mba_returns = calc_returns(top_no_mba, start_data, end_data)
 
-    sum_market_cap = sum([ti.market_cap for ti in top_no_mba])
-    returns = 0
-    for tinfo in top_no_mba:
-        ticker = tinfo.ticker
-        weight = tinfo.market_cap / sum_market_cap
-        returns += weight * (end_data[ticker].close - start_data[ticker].close) / start_data[ticker].close
-    print(f'{start_dt}:{end_dt}', f'No MBA :{round(returns, 3)}')
+    print(f'{start_dt}:{end_dt}', f'No MBA :{round(no_mba_returns, 3)}')
