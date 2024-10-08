@@ -161,10 +161,6 @@ def continue_doing(results_path, companies, func, save_every=5):
     with open(results_path, 'wb') as f:
         pickle.dump(results, f)
 
-def chunks(l, n):
-    for i in range(0, n):
-        yield l[i::n]
-
 def date_range(start_date, end_date):
     start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
     end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
