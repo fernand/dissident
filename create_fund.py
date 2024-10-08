@@ -39,6 +39,7 @@ if __name__ == '__main__':
             break
         if tinfo.ticker in results_founder and results_founder[tinfo.ticker].ceo_is_founder:
             top_founder.append(tinfo)
+    print('Num founder companies', len(top_founder))
     founder_ceo_results = calc_returns(top_founder, start_data, end_data)
 
     print(f'{start_dt}:{end_dt}', f'No MBA :{round(no_mba_returns, 3)}', f'Founder CEO :{round(founder_ceo_results, 3)}')
