@@ -9,9 +9,9 @@ import utils
 def step_1_get_yahoo_executives(tickers, date):
     from playwright.sync_api import sync_playwright
     @utils.retry_with_exponential_backoff
-    @utils.RateLimiter(calls_per_second=0.4)
+    @utils.RateLimiter(calls_per_second=0.3)
     def extract_table_html(page, symbol):
-        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile/')
+        page.goto(f'https://finance.yahoo.com/quote/{symbol}/profile')
         page.wait_for_selector("table", timeout=5000)
         table_html = page.inner_html("table")
         if 'your patience' in table_html:
