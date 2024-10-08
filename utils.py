@@ -1,5 +1,4 @@
 import asyncio
-import json
 import os
 import pickle
 import random
@@ -81,7 +80,7 @@ def async_retry_with_exponential_backoff(
             try:
                 return await func(*args, **kwargs)
             except errors as e:
-                print(e)
+                traceback.print_exc()
                 num_retries += 1
                 if num_retries > max_retries:
                     raise Exception(f"Maximum number of retries ({max_retries}) exceeded.")

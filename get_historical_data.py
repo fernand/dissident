@@ -38,7 +38,7 @@ async def get_ticker_info(client: httpx.AsyncClient, semaphore: asyncio.Semaphor
         results['ticker'],
         close,
         results.get('primary_exchange'),
-        results.get['cik'],
+        results.get('cik'),
         results.get('type'),
         results['active'],
         results.get('market_cap'),
@@ -108,5 +108,5 @@ def get_de_listed_companies():
         pickle.dump(list(delisted_companies.values()), f)
 
 if __name__ == '__main__':
-    get_all_historical_data('2023-08-27', '2024-10-07')
+    get_all_historical_data('2024-08-27', '2024-10-07')
     # get_de_listed_companies()
