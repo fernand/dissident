@@ -34,7 +34,7 @@ def calc_returns(
         capped_weights[ticker] = initial_weights[ticker] + additional_weight
 
     total_weight = sum(capped_weights.values())
-    # assert 0.999 <= total_weight <= 1.001
+    assert 0.999 <= total_weight <= 1.001
 
     portfolio_return = 0.0
     for ti in tickers:
