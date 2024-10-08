@@ -6,7 +6,7 @@ from typing import Optional
 from historical_data import TickerInfo, NullTickerInfo
 import utils
 
-def step_1_get_yahoo_executives(tickers, date):
+def step_1_get_yahoo_executives(companies, date):
     from playwright.sync_api import sync_playwright
     @utils.retry_with_exponential_backoff
     @utils.RateLimiter(calls_per_second=0.4)
@@ -25,7 +25,7 @@ def step_1_get_yahoo_executives(tickers, date):
         page = browser.new_page()
         def query(symbol):
             return extract_table_html(page, symbol)
-        utils.continue_doing(f'results_yahoo_executives_{date}.pkl', tickers, query)
+        utils.continue_doing(f'results_yahoo_executives_{date}.pkl', companies, query)
 
 def step_2_create_yahoo_ceo_batch(date):
     batch = []
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     date = '2024-08-27'
     with open('historical_data.pkl', 'rb') as f:
         h = pickle.load(f)
-    tickers = [tinfo.ticker for tinfo in h[date]]
-    step_1_get_yahoo_executives(tickers, date)
+    companies = [{'ticker': tinfo.ticker for tinfo in h[date]}]
+    step_1_get_yahoo_executives(companies, date)
     step_2_create_yahoo_ceo_batch(date)
     step_3_compile_yahoo_current_ceos(date)
