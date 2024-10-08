@@ -51,9 +51,8 @@ def calc_returns(
 if __name__ == '__main__':
     # TODO: Check any changes in CEO between start_dt and end_dt
     fund_size = 100
-    exchanges = ['XNAS', 'XNYS']
     start_dt, end_dt = '2024-08-27', '2024-10-07'
-    top_tickers = historical_data.get_top_tickers(start_dt, exchanges)
+    top_tickers = historical_data.get_top_tickers(start_dt)
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
         start_data = {tinfo.ticker: tinfo for tinfo in data[start_dt]}
@@ -70,4 +69,15 @@ if __name__ == '__main__':
     print('Num founder companies', len(top_founder))
     founder_ceo_results = calc_returns(top_founder, start_data, end_data)
 
-    print(f'{start_dt}:{end_dt}', f'Founder CEO: {round(founder_ceo_results, 3)}')
+    top_n_tickers = []
+    for tinfo in top_tickers:
+        if len(top_n_tickers) == len(top_founder):
+            break
+        top_n_tickers.append(tinfo)
+    top_market_cap_results = calc_returns(top_n_tickers, start_data, end_data)
+
+    print(
+        f'{start_dt}:{end_dt}',
+        f'Founder CEO: {round(founder_ceo_results, 3)}',
+        f'Top N market cap: {round(top_market_cap_results, 3)}'
+    )
