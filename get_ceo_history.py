@@ -146,6 +146,7 @@ def step_4_create_section_batch(companies, delisted=False):
             f.write('\n'.join([json.dumps(item) for item in chunk]))
 
 CEO_CHANGE_PROMPT = """Did the company filing this 8-K form have a change of Chief Executive Office based on the following 5.02 section? If yes identify the previous CEO and the new CEO. Ignore any role changes which are not Chief Executive Officer."""
+
 RESULT_BATCH_FILES = [
     'batches/batch_9spadxw8qCibONWCC6VHpl5H_output.jsonl',
     'batches/batch_d3Z8e29cQ0pNX8scp9q5eM54_output.jsonl',
@@ -153,13 +154,24 @@ RESULT_BATCH_FILES = [
     'batches/batch_IynbsAdjLiDgF09mdu4QazHg_output.jsonl',
     'batches/batch_V15ZiTiMLAkTdoy41lnnlPUr_output.jsonl',
 ]
+RESULT_BATCH_FILES_DELISTED = [
+    'batches/batch_zWxUyOOKEn8gHHIN5SiQSsEC_output.jsonl',
+    'batches/batch_RXmTO0tfEs3NqIQIOr1viahk_output.jsonl',
+    'batches/batch_aEa9CcmxSNGdZkpQT55nXwip_output.jsonl',
+    'batches/batch_7DPGHsRMlfNyw4id8S9UvuJZ_output.jsonl',
+    'batches/batch_52kGl7BAfRzK1uXF9D19PDES_output.jsonl'
+]
 
-def step_5_count_section_tokens():
+def step_5_count_section_tokens(delisted=False):
     import tiktoken
     encoding = tiktoken.encoding_for_model('gpt-4o-2024-08-06')
     system_prompt_len = len(encoding.encode(CEO_CHANGE_PROMPT))
     count = 0
-    for batch_file in RESULT_BATCH_FILES:
+    if delisted:
+        batch_files = RESULT_BATCH_FILES_DELISTED
+    else:
+        batch_files = RESULT_BATCH_FILES
+    for batch_file in batch_files:
         with open(batch_file) as f:
             for line in f:
                 section = json.loads(line.rstrip())['response']['body']['choices'][0]['message']['content']
@@ -169,9 +181,18 @@ def step_5_count_section_tokens():
     print('num M tokens', round(count / 1e6, 1))
     print(f'GPT-4o batched cost: ${round(1.25 * count / 1e6, 1)}')
 
-def step_6_create_ceo_change_batch():
+CEO_CHANGE_BATCH_FNAME = {
+    True: 'get_ceo_change_batch_delisted.jsonl',
+    False: 'get_ceo_change_batch.jsonl',
+}
+
+def step_6_create_ceo_change_batch(delisted=True):
+    if delisted:
+        batch_files = RESULT_BATCH_FILES_DELISTED
+    else:
+        batch_files = RESULT_BATCH_FILES
     batch = []
-    for batch_file in RESULT_BATCH_FILES:
+    for batch_file in batch_files:
         with open(batch_file) as f:
             for line in f:
                 result = json.loads(line.rstrip())
@@ -205,7 +226,7 @@ def step_6_create_ceo_change_batch():
                         },
                     }
                 })
-    with open(f'batches/get_ceo_change_batch.jsonl', 'w') as f:
+    with open(CEO_CHANGE_BATCH_FNAME[delisted], 'w') as f:
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
 @dataclass
@@ -215,9 +236,15 @@ class CEOChange:
     prev_ceo_name: str
     new_ceo_name: str
 
-def step_7_compile_ceo_changes():
+def step_7_compile_ceo_changes(delisted=True):
     ceo_changes = defaultdict(list)
-    with open('batches/batch_emZcU36HP7rOi1JP0KBS9cSa_output.jsonl') as f:
+    if delisted:
+        batch_file = None
+    else:
+        # Original batch with older prompt
+        # batch_file = 'batches/batch_emZcU36HP7rOi1JP0KBS9cSa_output.jsonl'
+        batch_file = 'batches/batch_X2U5dJpgJgyttL2p9dl6LO47_output.jsonl'
+    with open(batch_file) as f:
         for l in f:
             result = json.loads(l.rstrip())
             ticker, date, idx = result['custom_id'].split('_')
@@ -358,10 +385,15 @@ if __name__ == '__main__':
     # step_8_get_yahoo_executives(companies)
     # step_9_create_yahoo_ceo_batch()
     # step_10_compile_yahoo_current_ceos()
-    # step_11_merge_ceo_data()
+    step_11_merge_ceo_data()
 
-    with open('delisted_companies.pkl', 'rb') as f:
-        companies = pickle.load(f)
+    # with open('delisted_companies.pkl', 'rb') as f:
+    #     companies = pickle.load(f)
     # step_1_get_8k_metadata(companies, delisted=True)
     # step_2_get_8k_forms(companies, delisted=True)
-    step_4_create_section_batch(companies, delisted=True)
+    # step_4_create_section_batch(companies, delisted=True)
+    # step_5_count_section_tokens(delisted=True)
+    # step_6_create_ceo_change_batch(delisted=True)
+
+    pass
+
