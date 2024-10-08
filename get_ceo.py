@@ -45,5 +45,5 @@ if __name__ == '__main__':
     date = '2024-10-07'
     top_tickers = historical_data.get_top_tickers(date)
     companies = [{'ticker': tinfo.ticker} for tinfo in top_tickers]
-    # step_1_get_yahoo_executives(companies, date)
+    step_1_get_yahoo_executives(companies, date)
     step2_get_ceo_info(date, companies)

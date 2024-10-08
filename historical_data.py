@@ -78,7 +78,7 @@ def get_all_historical_data(start_date: str, end_date: str):
         with open('blacklist.pkl', 'wb') as f:
             pickle.dump(blacklist, f)
 
-def get_top_tickers(date: str, exchanges: list[str] = ['XNAS', 'XNYS'], top_k=600):
+def get_top_tickers(date: str, exchanges: list[str] = ['XNAS', 'XNYS'], top_k=1200):
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
     blacklist = ['CSGP']

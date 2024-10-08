@@ -34,7 +34,6 @@ def calc_returns(
         capped_weights[ticker] = initial_weights[ticker] + additional_weight
 
     total_weight = sum(capped_weights.values())
-    print('Total weight', total_weight)
     # assert 0.999 <= total_weight <= 1.001
 
     portfolio_return = 0.0
@@ -54,7 +53,7 @@ if __name__ == '__main__':
     fund_size = 100
     exchanges = ['XNAS', 'XNYS']
     start_dt, end_dt = '2024-08-27', '2024-10-07'
-    top_tickers = historical_data.get_top_tickers(start_dt, exchanges, top_k=600)
+    top_tickers = historical_data.get_top_tickers(start_dt, exchanges)
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
         start_data = {tinfo.ticker: tinfo for tinfo in data[start_dt]}
