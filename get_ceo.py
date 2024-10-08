@@ -1,10 +1,8 @@
-import json
 import pickle
-from dataclasses import dataclass
-from typing import Optional
 
-from historical_data import TickerInfo, NullTickerInfo
+import historical_data
 import utils
+from classes import TickerInfo, NullTickerInfo, CEO
 
 def step_1_get_yahoo_executives(companies, date):
     from playwright.sync_api import sync_playwright
@@ -27,70 +25,23 @@ def step_1_get_yahoo_executives(companies, date):
             return extract_table_html(page, company['ticker'])
         utils.continue_doing(f'results_yahoo_executives_{date}.pkl', companies, query)
 
-def step_2_create_yahoo_ceo_batch(date):
-    batch = []
+def step2_get_ceo_info(date):
     with open(f'results_yahoo_executives_{date}.pkl', 'rb') as f:
         company_tables = pickle.load(f)
-    for symbol, table in company_tables.items():
-        batch.append({
-            'custom_id': symbol,
-            'method': 'POST',
-            'url': '/v1/chat/completions',
-            'body': {
-                'model': 'gpt-4o-mini',
-                'messages': utils.openai_chat_template(
-                    'Extract the CEO (also known as Chief Executive Officer) name and year born from the HTML table.',
-                    table
-                ),
-                'max_tokens': 1000,
-                'response_format': {
-                    'type': 'json_schema',
-                    'json_schema': {
-                        'name': 'ceo',
-                        'schema': {
-                            'type': 'object',
-                            "properties": {
-                                'ceo_name': {'type': 'string'},
-                                'year_born': {'type': 'string'},
-                            },
-                            'required': ['ceo_name', 'year_born'],
-                            'additionalProperties': False,
-                        },
-                        'strict': True,
-                    },
-                },
-            }
-        })
-    with open(f'batches/get_yahoo_ceo_batch_{date}.jsonl', 'w') as f:
-        f.write('\n'.join([json.dumps(item) for item in batch]))
-
-@dataclass
-class CurrentCEO:
-    name: str
-    year_born: Optional[str]
-
-def step_3_compile_yahoo_current_ceos(date):
-    current_ceos = {}
-    with open('batches/batch_RylVMJyaTzkxcmhhZ6Mle9Y3_output.jsonl') as f:
-        for l in f:
-            result = json.loads(l.rstrip())
-            ticker = result['custom_id']
-            data = json.loads(result['response']['body']['choices'][0]['message']['content'])
-            ceo_name, year_born = data['ceo_name'], data['year_born']
-            if len(ceo_name) == 0 or ceo_name is None:
-                print(ticker, ceo_name, year_born)
-                continue
-            if len(year_born) == 0:
-                year_born = None
-            current_ceos[ticker] = CurrentCEO(ceo_name, year_born)
-    with open(f'results_yahoo_current_ceos_{date}.pkl', 'wb') as f:
-        pickle.dump(current_ceos, f)
+    companies = []
+    for ticker, table in company_tables.items():
+        companies.append({'ticker': ticker, 'table': table})
+    def query(company):
+        return utils.get_openai_response(
+            "Extract the CEO (also known as Chief Executive Officer) name from the HTML table, and whether the CEO is a Founder.",
+            company['table'],
+            CEO,
+        )
+    utils.continue_doing(f'results_yahoo_ceo_info_{date}.pkl', companies, query)
 
 if __name__ == '__main__':
-    date = '2024-08-27'
-    with open('historical_data.pkl', 'rb') as f:
-        h = pickle.load(f)
-    companies = [{'ticker': tinfo.ticker} for tinfo in h[date]]
-    step_1_get_yahoo_executives(companies, date)
-    # step_2_create_yahoo_ceo_batch(date)
-    # step_3_compile_yahoo_current_ceos(date)
+    date = '2024-10-07'
+    top_tickers = historical_data.get_top_tickers(date)
+    companies = [{'ticker': tinfo.ticker} for tinfo in top_tickers]
+    # step_1_get_yahoo_executives(companies, date)
+    step2_get_ceo_info(date)
