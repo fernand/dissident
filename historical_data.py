@@ -75,12 +75,13 @@ def get_all_historical_data(start_date: str, end_date: str):
         with open('blacklist.pkl', 'wb') as f:
             pickle.dump(blacklist, f)
 
-def get_top_tickers(date, top_k=600):
+def get_top_tickers(date: str, exchanges: list[str] = ['XNAS', 'XNYS'], top_k=600):
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
     blacklist = ['CSGP']
+    filtered = [tinfo for tinfo in data[date] if tinfo.exchange in exchanges]
     return sorted(
-        data[date],
+        filtered,
         key=lambda info: info.market_cap if info.market_cap is not None and info.ticker not in blacklist else 0,
         reverse=True,
     )[:top_k]

@@ -49,14 +49,15 @@ def calc_returns(
     return portfolio_return
 
 if __name__ == '__main__':
+    # TODO: Check any changes in CEO between start_dt and end_dt
     fund_size = 100
+    exchanges = ['XNAS', 'XNYS']
     start_dt, end_dt = '2024-08-27', '2024-10-07'
-    top_tickers = historical_data.get_top_tickers(start_dt, top_k=600)
+    top_tickers = historical_data.get_top_tickers(start_dt, exchanges, top_k=600)
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
         start_data = {tinfo.ticker: tinfo for tinfo in data[start_dt]}
         end_data = {tinfo.ticker: tinfo for tinfo in data[end_dt]}
-    # TODO: switch to start_dt
     with open(f'results_yahoo_ceo_info_{end_dt}.pkl', 'rb') as f:
         results_ceo: dict[str, CEO] = pickle.load(f)
 
