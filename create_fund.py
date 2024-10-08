@@ -1,6 +1,6 @@
 import pickle
 
-from get_historical_data import TickerInfo
+from historical_data import TickerInfo
 
 if __name__ == '__main__':
     # with open('historical_data.pkl', 'rb') as f:

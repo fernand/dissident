@@ -83,7 +83,7 @@ def step_3_get_historical_data(tickers, start_date, end_date):
         pickle.dump(results, f)
 
 def compare_performance(start_dt, end_dt):
-    from get_mba import MBAResult
+    from mba import MBAResult
     with open('results_n100_historical.pkl', 'rb') as f:
         historical_close: dict[str, tuple[str, float]] = pickle.load(f)
         for ticker in historical_close:

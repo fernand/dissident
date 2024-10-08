@@ -135,7 +135,7 @@ def get_perplexity_response(message):
     )
     return response.choices[0].message.content
 
-def continue_doing(results_path, companies, func, save_every=5):
+def continue_doing(results_path, tickers, func, save_every=5):
     if os.path.exists(results_path):
         with open(results_path, 'rb') as f:
             results = pickle.load(f)
@@ -143,15 +143,14 @@ def continue_doing(results_path, companies, func, save_every=5):
         results = {}
 
     count = 0
-    for company in tqdm(companies):
-        symbol = company['symbol']
-        if symbol in results:
+    for ticker in tqdm(tickers):
+        if ticker in results:
             continue
         try:
-            results[symbol] = func(company)
+            results[ticker] = func(ticker)
         except Exception as e:
             traceback.print_exc()
-            print(symbol, '\n')
+            print(ticker, '\n')
             continue
         count += 1
         if count == save_every:

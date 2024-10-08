@@ -3,9 +3,10 @@ import pickle
 from dataclasses import dataclass
 from typing import Optional
 
+from historical_data import TickerInfo, NullTickerInfo
 import utils
 
-def step_1_get_yahoo_executives(companies):
+def step_1_get_yahoo_executives(tickers, date):
     from playwright.sync_api import sync_playwright
     @utils.retry_with_exponential_backoff
     @utils.RateLimiter(calls_per_second=0.4)
@@ -22,13 +23,13 @@ def step_1_get_yahoo_executives(companies):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        def query(company):
-            return extract_table_html(page, company['symbol'])
-        utils.continue_doing('results_yahoo_executives.pkl', companies, query)
+        def query(symbol):
+            return extract_table_html(page, symbol)
+        utils.continue_doing(f'results_yahoo_executives_{date}.pkl', tickers, query)
 
-def step_2_create_yahoo_ceo_batch():
+def step_2_create_yahoo_ceo_batch(date):
     batch = []
-    with open('results_yahoo_executives.pkl', 'rb') as f:
+    with open(f'results_yahoo_executives_{date}.pkl', 'rb') as f:
         company_tables = pickle.load(f)
     for symbol, table in company_tables.items():
         batch.append({
@@ -60,7 +61,7 @@ def step_2_create_yahoo_ceo_batch():
                 },
             }
         })
-    with open(f'batches/get_yahoo_ceo_batch.jsonl', 'w') as f:
+    with open(f'batches/get_yahoo_ceo_batch_{date}.jsonl', 'w') as f:
         f.write('\n'.join([json.dumps(item) for item in batch]))
 
 @dataclass
@@ -68,7 +69,7 @@ class CurrentCEO:
     name: str
     year_born: Optional[str]
 
-def step_3_compile_yahoo_current_ceos():
+def step_3_compile_yahoo_current_ceos(date):
     current_ceos = {}
     with open('batches/batch_RylVMJyaTzkxcmhhZ6Mle9Y3_output.jsonl') as f:
         for l in f:
@@ -82,11 +83,14 @@ def step_3_compile_yahoo_current_ceos():
             if len(year_born) == 0:
                 year_born = None
             current_ceos[ticker] = CurrentCEO(ceo_name, year_born)
-    with open('results_yahoo_current_ceos.pkl', 'wb') as f:
+    with open(f'results_yahoo_current_ceos_{date}.pkl', 'wb') as f:
         pickle.dump(current_ceos, f)
 
 if __name__ == '__main__':
-    companies = utils.get_nasdaq_companies()
-    step_1_get_yahoo_executives(companies)
-    step_2_create_yahoo_ceo_batch()
-    step_3_compile_yahoo_current_ceos()
+    date = '2024-08-27'
+    with open('historical_data.pkl', 'rb') as f:
+        h = pickle.load(f)
+    tickers = [tinfo.ticker for tinfo in h[date]]
+    step_1_get_yahoo_executives(tickers, date)
+    step_2_create_yahoo_ceo_batch(date)
+    step_3_compile_yahoo_current_ceos(date)
