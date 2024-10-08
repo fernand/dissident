@@ -108,5 +108,5 @@ def get_de_listed_companies():
         pickle.dump(list(delisted_companies.values()), f)
 
 if __name__ == '__main__':
-    # get_all_historical_data('2019-09-11', '2024-09-06')
-    get_de_listed_companies()
+    get_all_historical_data('2023-08-27', '2024-10-07')
+    # get_de_listed_companies()

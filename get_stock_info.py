@@ -8,7 +8,6 @@ from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm
 
 import api_config
-import n100
 import utils
 
 API_KEY = f'apiKey={api_config.POLYGON_API_KEY}'

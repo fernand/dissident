@@ -136,16 +136,6 @@ def get_perplexity_response(message):
     )
     return response.choices[0].message.content
 
-# From https://www.sec.gov/files/company_tickers_exchange.json
-def get_nasdaq_companies():
-    companies = []
-    with open('company_tickers_exchange.json') as f:
-        for row in json.load(f)['data']:
-            cik, company_name, symbol, exchange = row
-            if exchange == 'Nasdaq':
-                companies.append({'cik': cik, 'name': company_name, 'symbol': symbol})
-    return companies
-
 def continue_doing(results_path, companies, func, save_every=5):
     if os.path.exists(results_path):
         with open(results_path, 'rb') as f:
