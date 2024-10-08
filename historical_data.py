@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import os
 import pickle
 
@@ -90,4 +91,5 @@ def get_top_tickers(date: str, exchanges: list[str] = ['XNYS', 'XNAS'], top_k=12
     )[:top_k]
 
 if __name__ == '__main__':
-    get_all_historical_data('2024-08-27', '2024-10-07')
+    end_dt = (datetime.now() - datetime.timedelta(1)).strftime('%Y-%m-%d')
+    get_all_historical_data('2024-08-27', end_dt)
