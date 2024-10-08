@@ -73,7 +73,7 @@ if __name__ == '__main__':
         current_ceos = pickle.load(f)
 
     date = '2024-08-27'
-    top_tickers = historical_data.get_top_tickers(date, 2000)
+    top_tickers = historical_data.get_top_tickers(date, 600)
     top_tickers = set([tinfo.ticker for tinfo in top_tickers])
 
     companies = []
