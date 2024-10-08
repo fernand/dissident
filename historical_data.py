@@ -65,7 +65,7 @@ def get_all_historical_data(start_date: str, end_date: str):
                 case NullTickerInfo():
                     blacklist.add(info.ticker)
                 case TickerInfo():
-                    if info.exchange != 'XNAS' or info.type != 'CS':
+                    if info.exchange not in ['XNAS', 'XNYS'] or info.type != 'CS':
                         blacklist.add(info.ticker)
                     else:
                         filtered_results.append(info)
