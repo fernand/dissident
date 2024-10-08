@@ -24,7 +24,7 @@ class MBAResult:
     ceo_mba_response:str|None = None
 
 def ceo_mba_question(ceo_name, company_name):
-    return f"Does {ceo_name.lstrip('Mr. ').lstrip('Ms. ').listrip('Dr. ')}, CEO of {company_name} have an MBA or MBA like degree?"
+    return f"Does {ceo_name.lstrip('Mr. ').lstrip('Ms. ').lstrip('Dr. ')}, CEO of {company_name} have an MBA or MBA like degree?"
 
 def mba_query(company):
     ceo_mba_response = utils.get_perplexity_response(ceo_mba_question(company['ceo_name'], company['ticker']))
