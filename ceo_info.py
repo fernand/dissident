@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 import utils
-from ceo import CurrentCEO
+from get_ceo import CurrentCEO
 from historical_data import TickerInfo
 
 class CompanyName(BaseModel):
