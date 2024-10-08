@@ -56,14 +56,11 @@ def ceo_founder_question(ceo_name, company_name):
 
 def founder_query(company):
     ceo_founder_response = utils.get_perplexity_response(ceo_founder_question(company['ceo_name'], company['ticker']))
-    print(ceo_founder_response)
     ceo_is_founder = utils.get_openai_response(
         "Extract the true/false value whether the person founded the company.",
         ceo_founder_response,
         IsFounder,
     ).is_founder
-    print(ceo_is_founder)
-    print()
     return CEOFounderResult(
         company['ticker'],
         company['ceo_name'],
@@ -76,7 +73,7 @@ if __name__ == '__main__':
         current_ceos = pickle.load(f)
 
     date = '2024-08-27'
-    top_tickers = historical_data.get_top_tickers(date, 300)
+    top_tickers = historical_data.get_top_tickers(date, 2000)
     top_tickers = set([tinfo.ticker for tinfo in top_tickers])
 
     companies = []
@@ -85,4 +82,4 @@ if __name__ == '__main__':
             companies.append({'ticker': ticker, 'ceo_name': current_ceo.name})
 
     # utils.continue_doing('results_mba.pkl', companies, mba_query)
-    # utils.continue_doing('results_founder.pkl', companies, founder_query)
+    utils.continue_doing('results_founder.pkl', companies, founder_query)
