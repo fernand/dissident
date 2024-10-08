@@ -1,3 +1,4 @@
+import json
 import pickle
 
 import historical_data
@@ -35,6 +36,9 @@ def calc_returns(
 
     total_weight = sum(capped_weights.values())
     assert 0.999 <= total_weight <= 1.001
+
+    with open('portfolio.json', 'w') as f:
+        json.dump(capped_weights, f, indent=4)
 
     portfolio_return = 0.0
     for ti in tickers:
