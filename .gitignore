@@ -1,6 +1,7 @@
 ﻿venv
-*.pkl
 __pycache__
+api_config.py
+*.pkl
 *.json
 *.jsonl
-api_config.py
+*.7z

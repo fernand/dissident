@@ -3,9 +3,9 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
+import historical_data
 import utils
 from get_ceo import CurrentCEO
-from historical_data import TickerInfo
 
 class CompanyName(BaseModel):
     name: str
@@ -47,16 +47,9 @@ if __name__ == '__main__':
     with open('results_yahoo_current_ceos.pkl', 'rb') as f:
         current_ceos = pickle.load(f)
 
-    start_dt = '2024-08-27'
-    with open('historical_data.pkl', 'rb') as f:
-        data = pickle.load(f)
-    blacklist = ['CSGP']
-    sorted_data = sorted(
-        data[start_dt],
-        key=lambda info: info.market_cap if info.market_cap is not None and info.ticker not in blacklist else 0,
-        reverse=True,
-    )
-    top_tickers = set([tinfo.ticker for tinfo in sorted_data[:300]])
+    date = '2024-08-27'
+    top_tickers = historical_data.get_top_tickers(date, 300)
+    top_tickers = set([tinfo.ticker for tinfo in top_tickers])
 
     companies = []
     for ticker, current_ceo in current_ceos.items():

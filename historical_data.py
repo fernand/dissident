@@ -107,6 +107,16 @@ def get_de_listed_companies():
     with open('delisted_companies.pkl', 'wb') as f:
         pickle.dump(list(delisted_companies.values()), f)
 
+def get_top_tickers(date, top_k=300):
+    with open('historical_data.pkl', 'rb') as f:
+        data = pickle.load(f)
+    blacklist = ['CSGP']
+    return sorted(
+        data[date],
+        key=lambda info: info.market_cap if info.market_cap is not None and info.ticker not in blacklist else 0,
+        reverse=True,
+    )[:top_k]
+
 if __name__ == '__main__':
     get_all_historical_data('2024-08-27', '2024-10-07')
     # get_de_listed_companies()
