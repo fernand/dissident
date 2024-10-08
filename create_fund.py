@@ -37,9 +37,6 @@ def calc_returns(
     total_weight = sum(capped_weights.values())
     assert 0.999 <= total_weight <= 1.001
 
-    with open('portfolio.json', 'w') as f:
-        json.dump(capped_weights, f, indent=4)
-
     portfolio_return = 0.0
     for ti in tickers:
         ticker = ti.ticker
@@ -50,7 +47,7 @@ def calc_returns(
         end_close = end_data[ticker].close
         portfolio_return += capped_weights[ticker] * (end_close - start_close) / start_close
 
-    return portfolio_return
+    return portfolio_return, capped_weights
 
 if __name__ == '__main__':
     # TODO: Check any changes in CEO between start_dt and end_dt
@@ -71,14 +68,17 @@ if __name__ == '__main__':
         if tinfo.ticker in results_ceo and results_ceo[tinfo.ticker].is_founder:
             top_founder.append(tinfo)
     print('Num founder companies', len(top_founder))
-    founder_ceo_results = calc_returns(top_founder, start_data, end_data)
+    founder_ceo_results, weights = calc_returns(top_founder, start_data, end_data)
+    with open('portfolio.json', 'w') as f:
+        json.dump(weights, f, indent=4)
+
 
     top_n_tickers = []
     for tinfo in top_tickers:
         if len(top_n_tickers) == len(top_founder):
             break
         top_n_tickers.append(tinfo)
-    top_market_cap_results = calc_returns(top_n_tickers, start_data, end_data)
+    top_market_cap_results, _ = calc_returns(top_n_tickers, start_data, end_data)
 
     print(
         f'{start_dt}:{end_dt}',

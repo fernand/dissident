@@ -35,7 +35,7 @@ def step2_get_ceo_info(date, ref_companies):
             companies.append({'ticker': ticker, 'table': table})
     def query(company):
         return utils.get_openai_response(
-            "Extract the CEO (also known as Chief Executive Officer) name from the HTML table, and whether the CEO is a Founder.",
+            "Extract the CEO (also known as Chief Executive Officer) name from the HTML table, and whether the CEO is also listed as a Founder.",
             company['table'],
             CEO,
         )
@@ -45,5 +45,5 @@ if __name__ == '__main__':
     date = '2024-10-07'
     top_tickers = historical_data.get_top_tickers(date)
     companies = [{'ticker': tinfo.ticker} for tinfo in top_tickers]
-    step_1_get_yahoo_executives(companies, date)
+    # step_1_get_yahoo_executives(companies, date)
     step2_get_ceo_info(date, companies)
