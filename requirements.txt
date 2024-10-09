@@ -1,3 +1,4 @@
+alpaca-py
 httpx
 openai
 playwright
