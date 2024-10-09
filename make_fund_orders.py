@@ -19,7 +19,6 @@ async def get_close(client: httpx.AsyncClient, semaphore: asyncio.Semaphore, tic
     resp = resp.json()
     return (ticker, resp['close'])
 
-
 async def get_all_close(tickers: list[str], date: str, num_concurrent=10) -> dict[str, float]:
     semaphore = asyncio.Semaphore(num_concurrent)
     async with httpx.AsyncClient() as client:
