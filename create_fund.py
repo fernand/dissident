@@ -50,16 +50,19 @@ def calc_returns(
     return portfolio_return, capped_weights
 
 if __name__ == '__main__':
+    prospective = True
     # TODO: Check any changes in CEO between start_dt and end_dt
     fund_size = 100
     start_dt, end_dt = '2024-08-27', '2024-10-08'
-    top_tickers = historical_data.get_top_tickers(start_dt)
+    top_tickers = historical_data.get_top_tickers(end_dt if prospective else start_dt)
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
         start_data = {tinfo.ticker: tinfo for tinfo in data[start_dt]}
         end_data = {tinfo.ticker: tinfo for tinfo in data[end_dt]}
     with open(f'results_yahoo_ceo_info_2024-10-07.pkl', 'rb') as f:
         results_ceo: dict[str, CEO] = pickle.load(f)
+    with open(f'results_yahoo_ceo_info_2024-08-27.pkl', 'rb') as f:
+        results_ceo_old: dict[str, CEO] = pickle.load(f)
 
     top_founder = []
     for tinfo in top_tickers:
@@ -72,6 +75,11 @@ if __name__ == '__main__':
     with open('portfolio.json', 'w') as f:
         json.dump(weights, f, indent=4)
 
+    for tinfo in top_founder:
+        ticker = tinfo.ticker
+        ceo = results_ceo[ticker]
+        if ticker in results_ceo_old and ceo.is_founder != results_ceo_old[ticker].is_founder:
+            print(f'Founder diff {ticker} old:{ceo.name} new:{results_ceo_old[ticker].name}, new_is_founder:{ceo.is_founder}')
 
     top_n_tickers = []
     for tinfo in top_tickers:

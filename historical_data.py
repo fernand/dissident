@@ -82,7 +82,7 @@ def get_all_historical_data(start_date: str, end_date: str):
 def get_top_tickers(date: str, exchanges: list[str] = ['XNYS', 'XNAS'], top_k=1200):
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
-    blacklist = ['CSGP', 'GOOGL']
+    blacklist = ['CSGP', 'GOOGL', 'ARCC']
     filtered = [tinfo for tinfo in data[date] if tinfo.exchange in exchanges]
     return sorted(
         filtered,
