@@ -52,13 +52,13 @@ def calc_returns(
 if __name__ == '__main__':
     # TODO: Check any changes in CEO between start_dt and end_dt
     fund_size = 100
-    start_dt, end_dt = '2024-08-27', '2024-10-07'
+    start_dt, end_dt = '2024-08-27', '2024-10-08'
     top_tickers = historical_data.get_top_tickers(start_dt)
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
         start_data = {tinfo.ticker: tinfo for tinfo in data[start_dt]}
         end_data = {tinfo.ticker: tinfo for tinfo in data[end_dt]}
-    with open(f'results_yahoo_ceo_info_{end_dt}.pkl', 'rb') as f:
+    with open(f'results_yahoo_ceo_info_2024-10-07.pkl', 'rb') as f:
         results_ceo: dict[str, CEO] = pickle.load(f)
 
     top_founder = []
