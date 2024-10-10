@@ -1,6 +1,7 @@
 import asyncio
 import json
 import traceback
+from datetime import datetime
 
 import httpx
 from alpaca.trading.client import TradingClient
@@ -13,16 +14,17 @@ import utils
 PAPI_KEY = f'apiKey={api_config.POLYGON_API_KEY}'
 
 @utils.async_retry_with_exponential_backoff
-async def get_close(client: httpx.AsyncClient, semaphore: asyncio.Semaphore, ticker: str, date: str) -> float:
+async def get_latest_price(client: httpx.AsyncClient, semaphore: asyncio.Semaphore, ticker: str, date: str) -> float:
     async with semaphore:
-        resp = await client.get(f'https://api.polygon.io/v1/open-close/{ticker}/{date}?adjusted=true&{PAPI_KEY}')
+        resp = await client.get(f'https://api.polygon.io/v2/aggs/ticker/{ticker}/range/15/minute/{date}/{date}?adjusted=true&sort=desc&{PAPI_KEY}')
     resp = resp.json()
-    return (ticker, resp['close'])
+    latest_bar = resp['results'][0]
+    return (ticker, latest_bar['vw'])
 
-async def get_all_close(tickers: list[str], date: str, num_concurrent=10) -> dict[str, float]:
+async def get_all_price(tickers: list[str], date: str, num_concurrent=10) -> dict[str, float]:
     semaphore = asyncio.Semaphore(num_concurrent)
     async with httpx.AsyncClient() as client:
-        tasks = [get_close(client, semaphore, t, date) for t in tickers]
+        tasks = [get_latest_price(client, semaphore, t, date) for t in tickers]
         results = await asyncio.gather(*tasks)
     return dict(results)
 
@@ -38,16 +40,18 @@ def make_order(trading_client, ticker:str, qty: float):
 
 if __name__ == '__main__':
     trading_client = TradingClient(api_config.ALPACA_PAPER_API_KEY, api_config.ALPACA_PAPER_API_SECRET, paper=True)
+    # trading_client = TradingClient(api_config.ALPACA_API_KEY, api_config.ALPACA_API_SECRET, paper=True)
 
     with open('portfolio.json') as f:
         portfolio = json.load(f)
 
-    close = asyncio.run(get_all_close(portfolio.keys(), '2024-10-08'))
+    date = datetime.now().strftime('%Y-%m-%d')
+    price = asyncio.run(get_all_price(portfolio.keys(), date))
 
-    portfolio_amount = 9_990
+    portfolio_amount = 10_000
 
-    for ticker, close in close.items():
+    for ticker, price in price.items():
         weight = portfolio[ticker]
-        qty = portfolio_amount * weight / close
+        qty = portfolio_amount * weight / price
         if qty > 0:
             make_order(trading_client, ticker, qty)
