@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     close = asyncio.run(get_all_close(portfolio.keys(), '2024-10-08'))
 
-    portfolio_amount = 10_000
+    portfolio_amount = 9_990
 
     for ticker, close in close.items():
         weight = portfolio[ticker]
