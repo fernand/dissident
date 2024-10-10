@@ -53,7 +53,7 @@ if __name__ == '__main__':
     prospective = True
     # TODO: Check any changes in CEO between start_dt and end_dt
     fund_size = 100
-    start_dt, end_dt = '2024-08-27', '2024-10-09'
+    start_dt, end_dt = '2024-08-27', '2024-10-10'
     top_tickers = historical_data.get_top_tickers(end_dt if prospective else start_dt)
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
