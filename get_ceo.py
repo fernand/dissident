@@ -25,6 +25,7 @@ def step_1_get_yahoo_executives(companies, date):
             return extract_table_html(page, company['ticker'])
         utils.continue_doing(f'results_yahoo_executives_{date}.pkl', companies, query)
 
+# TODO: Replace with a simple find
 def step2_get_ceo_info(date, ref_companies):
     with open(f'results_yahoo_executives_{date}.pkl', 'rb') as f:
         company_tables = pickle.load(f)

@@ -40,7 +40,7 @@ def make_order(trading_client, ticker:str, qty: float):
 
 if __name__ == '__main__':
     trading_client = TradingClient(api_config.ALPACA_PAPER_API_KEY, api_config.ALPACA_PAPER_API_SECRET, paper=True)
-    # trading_client = TradingClient(api_config.ALPACA_API_KEY, api_config.ALPACA_API_SECRET, paper=True)
+    # trading_client = TradingClient(api_config.ALPACA_API_KEY, api_config.ALPACA_API_SECRET, paper=False)
 
     with open('portfolio.json') as f:
         portfolio = json.load(f)
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     date = datetime.now().strftime('%Y-%m-%d')
     price = asyncio.run(get_all_price(portfolio.keys(), date))
 
-    portfolio_amount = 10_000
+    portfolio_amount = 9_900
 
     for ticker, price in price.items():
         weight = portfolio[ticker]
