@@ -87,6 +87,7 @@ def async_retry_with_exponential_backoff(
                 delay *= exponential_base * (1 + jitter * random.random())
                 await asyncio.sleep(delay)
             except Exception as e:
+                asyncio.sleep(1)
                 raise e
 
     return wrapper
