@@ -21,5 +21,5 @@ if __name__ == '__main__':
         portfolio = json.load(f)
     with open('historical_data.pkl', 'rb') as f:
         stock_data = pickle.load(f)
-    portfolio_returns(portfolio, stock_data[start_dt], stock_data[end_dt])
+    portfolio_returns(portfolio, stock_data[start_dt], stock_data[end_dt], equal_weighted=False)
     portfolio_returns(portfolio, stock_data[start_dt], stock_data[end_dt], equal_weighted=True)
