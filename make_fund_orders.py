@@ -42,7 +42,8 @@ if __name__ == '__main__':
     trading_client = TradingClient(api_config.ALPACA_PAPER_API_KEY, api_config.ALPACA_PAPER_API_SECRET, paper=True)
     # trading_client = TradingClient(api_config.ALPACA_API_KEY, api_config.ALPACA_API_SECRET, paper=False)
 
-    with open('portfolio.json') as f:
+    dt = '2024-10-11'
+    with open(f'portfolio_{dt}.json') as f:
         portfolio = json.load(f)
 
     date = datetime.now().strftime('%Y-%m-%d')

@@ -31,7 +31,7 @@ async def get_ticker_info(client: httpx.AsyncClient, semaphore: asyncio.Semaphor
         results.get('market_cap'),
     )
 
-async def get_all_ticker_info(ticker_closes: list[tuple[str, float]], date: str, num_concurrent=10):
+async def get_all_ticker_info(ticker_closes: list[tuple[str, float]], date: str, num_concurrent=8):
     semaphore = asyncio.Semaphore(num_concurrent)
     async with httpx.AsyncClient() as client:
         tasks = [get_ticker_info(client, semaphore, tc, date) for tc in ticker_closes]
