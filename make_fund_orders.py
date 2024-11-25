@@ -49,7 +49,7 @@ if __name__ == '__main__':
     date = datetime.now().strftime('%Y-%m-%d')
     price = asyncio.run(get_all_price(portfolio.keys(), date))
 
-    portfolio_amount = 9_900
+    portfolio_amount = 5_000
 
     for ticker, price in price.items():
         weight = portfolio[ticker]
