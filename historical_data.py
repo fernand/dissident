@@ -56,9 +56,8 @@ def get_all_historical_data(start_date: str, end_date: str):
             date_results = pickle.load(f)
     else:
         date_results = {}
-    for date in tqdm.tqdm(utils.date_range(start_date, end_date)):
-        if date in date_results:
-            continue
+    dates_to_process = [d for d in utils.date_range(start_date, end_date) if d not in date_results]
+    for date in tqdm.tqdm(dates_to_process):
         # Hack if we don't want to wait for the middle data which is usually not needed.
         # if date != end_date:
         #     continue
