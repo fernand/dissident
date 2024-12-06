@@ -78,6 +78,27 @@ def get_all_historical_data(start_date: str, end_date: str):
         with open('blacklist.pkl', 'wb') as f:
             pickle.dump(blacklist, f)
 
+def get_historical_data(dates: list[str]):
+    if os.path.exists('dates.pkl'):
+        with open('dates.pkl', 'rb') as f:
+            date_results = pickle.load(f)
+    else:
+        date_results = {}
+    dates_to_process = [d for d in dates if d not in date_results]
+    for date in tqdm.tqdm(dates_to_process):
+        results = get_date(date, set())
+        filtered_results = []
+        for info in results:
+            match info:
+                case NullTickerInfo():
+                    pass
+                case TickerInfo():
+                    if info.exchange in ['XNAS', 'XNYS'] and info.type == 'CS':
+                        filtered_results.append(info)
+        date_results[date] = filtered_results
+    with open('dates.pkl', 'wb') as f:
+        pickle.dump(date_results, f)
+
 def get_top_tickers(date: str, exchanges: list[str] = ['XNYS', 'XNAS'], top_k=1200):
     with open('historical_data.pkl', 'rb') as f:
         data = pickle.load(f)
@@ -91,4 +112,5 @@ def get_top_tickers(date: str, exchanges: list[str] = ['XNYS', 'XNAS'], top_k=12
 
 if __name__ == '__main__':
     end_dt = (datetime.now() - timedelta(1)).strftime('%Y-%m-%d')
-    get_all_historical_data('2024-08-27', end_dt)
+    # get_all_historical_data('2024-08-27', end_dt)
+    get_historical_data(['2024-08-27', end_dt])

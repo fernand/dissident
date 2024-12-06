@@ -50,12 +50,12 @@ def calc_returns(
     return portfolio_return, capped_weights
 
 if __name__ == '__main__':
-    prospective = True
+    prospective = False
     # TODO: Check any changes in CEO between start_dt and end_dt
-    fund_size = 100
+    fund_size = 20
     start_dt, end_dt = '2024-08-27', '2024-12-05'
     top_tickers = historical_data.get_top_tickers(end_dt if prospective else start_dt)
-    with open('historical_data.pkl', 'rb') as f:
+    with open('dates.pkl', 'rb') as f:
         data = pickle.load(f)
         start_data = {tinfo.ticker: tinfo for tinfo in data[start_dt]}
         end_data = {tinfo.ticker: tinfo for tinfo in data[end_dt]}

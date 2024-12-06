@@ -19,7 +19,7 @@ if __name__ == '__main__':
     start_dt, end_dt = '2024-08-27', '2024-12-05'
     with open(f'portfolio.json') as f:
         portfolio = json.load(f)
-    with open('historical_data.pkl', 'rb') as f:
+    with open('dates.pkl', 'rb') as f:
         stock_data = pickle.load(f)
     portfolio_returns(portfolio, stock_data[start_dt], stock_data[end_dt], equal_weighted=False)
     portfolio_returns(portfolio, stock_data[start_dt], stock_data[end_dt], equal_weighted=True)
