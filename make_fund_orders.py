@@ -42,7 +42,10 @@ if __name__ == '__main__':
     trading_client = TradingClient(api_config.ALPACA_PAPER_API_KEY, api_config.ALPACA_PAPER_API_SECRET, paper=True)
     # trading_client = TradingClient(api_config.ALPACA_API_KEY, api_config.ALPACA_API_SECRET, paper=False)
 
-    dt = '2024-11-11'
+    # This ignores the weights in the json file
+    equal_weights = True
+    dt = '2024-12-09'
+
     with open(f'portfolio_{dt}.json') as f:
         portfolio = json.load(f)
 
@@ -53,6 +56,9 @@ if __name__ == '__main__':
 
     for ticker, price in price.items():
         weight = portfolio[ticker]
-        qty = portfolio_amount * weight / price
+        if equal_weights:
+            qty = portfolio_amount * (1 / len(portfolio)) / price
+        else:
+            qty = portfolio_amount * weight / price
         if qty > 0:
             make_order(trading_client, ticker, qty)

@@ -16,7 +16,7 @@ def portfolio_returns(portfolio: dict[str, float], start_data: list[TickerInfo],
     print(f'Returns {'equal weighted' if equal_weighted else ''}: {returns:.1f}%')
 
 if __name__ == '__main__':
-    start_dt, end_dt = '2024-08-27', '2024-12-05'
+    start_dt, end_dt = '2024-08-27', '2024-12-09'
     with open(f'portfolio.json') as f:
         portfolio = json.load(f)
     with open('dates.pkl', 'rb') as f:
